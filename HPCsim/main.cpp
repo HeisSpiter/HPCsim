@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <cassert>
+#include <cstddef>
 
 #include "TThreadsFactory.h"
 #include "RngStream.h"
@@ -139,8 +140,8 @@ static void * WriteResults(void * Arg)
         if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
             break;
 
-        /* Write the event to the output file */
-        write(outFD, &result, sizeof(TResult));
+        /* Write the event to the output file - only write what's needed */
+        write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength);
     }
 
     close(outFD);
