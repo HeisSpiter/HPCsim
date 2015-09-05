@@ -1,0 +1,7 @@
+add_executable(HPCsim RngStream.cpp sha2.c TThreadsFactory.cpp)
+if(THREADS_HAVE_PTHREAD_ARG)
+  target_compile_options(PUBLIC HPCsim "-pthread")
+endif()
+if(CMAKE_THREAD_LIBS_INIT)
+  target_link_libraries(HPCsim "${CMAKE_THREAD_LIBS_INIT}")
+endif()
