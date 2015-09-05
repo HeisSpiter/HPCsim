@@ -8,11 +8,15 @@
 
 typedef int (* TSimulationInit)(unsigned int, unsigned long, unsigned long, void **);
 typedef int (* TRunInit)(void *);
-typedef int (* TEventInit)(void *, void *);
-typedef void (* TEventRun)(void *);
-typedef void (* TEventClear)(void *);
+typedef int (* TEventInit)(void *, void *, void **);
+typedef void (* TEventRun)(void *, void *);
+typedef void (* TEventClear)(void *, void *);
 typedef void (* TRunClear)(void *);
 typedef void (* TSimulationUnload)(void *);
+
+#ifndef SHA384_DIGEST_LENGTH
+#define SHA384_DIGEST_LENGTH 48
+#endif
 
 typedef struct TResult
 {

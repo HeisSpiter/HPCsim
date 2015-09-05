@@ -87,10 +87,11 @@ static void * SimulationLoop(void * Arg)
     void * simulationContext = reinterpret_cast<void *>(Arg);
 #endif
     {
+        void * eventContext;
         RngStream rand;
 
         /* Init the event */
-        if (gSimulation.fEventInit(simulationContext, &rand) < 0)
+        if (gSimulation.fEventInit(simulationContext, &rand, &eventContext) < 0)
         {
 #ifdef USE_PILOT_THREAD
             continue;
@@ -104,14 +105,14 @@ static void * SimulationLoop(void * Arg)
         sem_post(TThreadsFactory::GetInstance()->GetInitLock());
 
         /* Call the simulation */
-        gSimulation.fEventRun(simulationContext);
+        gSimulation.fEventRun(simulationContext, eventContext);
 
 #ifdef USE_PILOT_THREAD
         sem_wait(TThreadsFactory::GetInstance()->GetInitLock());
 #endif
 
         /* Notify end of event */
-        gSimulation.fEventClear(simulationContext);
+        gSimulation.fEventClear(simulationContext, eventContext);
     }
 
 #ifdef USE_PILOT_THREAD
