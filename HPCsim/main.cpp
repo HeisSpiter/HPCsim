@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:        See LICENSE in the top level directory
+ * PROJECT:          HPCsim
+ * FILE:             HPCsim/main.cpp
+ * PURPOSE:          Main simulation file
+ * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
+ */
+
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
