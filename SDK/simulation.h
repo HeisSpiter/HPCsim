@@ -6,6 +6,11 @@
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 typedef int (* TSimulationInit)(unsigned int, unsigned long, unsigned long, void **);
 typedef int (* TRunInit)(void *);
 typedef int (* TEventInit)(void *, void *, void **);
@@ -27,3 +32,7 @@ typedef struct TResult
 
 double RandU01(void *);
 void QueueResult(TResult *, void *);
+
+#ifdef __cplusplus
+}
+#endif

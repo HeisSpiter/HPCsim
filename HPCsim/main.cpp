@@ -57,7 +57,7 @@ static TSimulationAddresses gSimulation;
     }
 
 /* Exported */
-double RandU01(void * context)
+extern "C" double RandU01(void * context)
 {
     RngStream * rand = reinterpret_cast<RngStream *>(context);
 
@@ -65,7 +65,7 @@ double RandU01(void * context)
 }
 
 /* Exported */
-void QueueResult(TResult * result, void * context)
+extern "C" void QueueResult(TResult * result, void * context)
 {
     RngStream * rand = reinterpret_cast<RngStream *>(context);
 
@@ -241,7 +241,7 @@ int main(int argc, char * argv[])
     simulationLib = dlopen(simulationFile, RTLD_NOW | RTLD_LOCAL);
     if (simulationLib == 0)
     {
-        std::cerr << "Failed loading " << simulationLib << std::endl;
+        std::cerr << "Failed loading " << simulationFile << std::endl;
         return 0;
     }
 
