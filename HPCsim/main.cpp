@@ -257,6 +257,7 @@ int main(int argc, char * argv[])
     /* Init the simulation */
     if (gSimulation.fSimulationInit(nThreads, nEvents, firstEvent, &simulationContext) < 0)
     {
+        std::cerr << "Failed initializing library" << std::endl;
         goto end;
     }
 
@@ -276,18 +277,21 @@ int main(int argc, char * argv[])
     /* Open the communication pipe */
     if (pipe(gPipe) == -1)
     {
+        std::cerr << "Failed creating pipes" << std::endl;
         goto end2;
     }
 
     /* Start our background writing thread */
     if (pthread_create(&writingThread, 0, WriteResults, outputFile) != 0)
     {
+        std::cerr << "Failed creating writing thread" << std::endl;
         goto end3;
     }
 
     /* Initialize the run */
     if (gSimulation.fRunInit(simulationContext) < 0)
     {
+        std::cerr << "Failed initializing run" << std::endl;
         goto end4;
     }
 
