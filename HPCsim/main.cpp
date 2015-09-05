@@ -254,7 +254,7 @@ int main(int argc, char * argv[])
     LoadAndSetSimulationFunction(SimulationUnload);
 
     /* Init the simulation */
-    if (gSimulation.fSimulationInit(&simulationContext) < 0)
+    if (gSimulation.fSimulationInit(nThreads, nEvents, firstEvent, &simulationContext) < 0)
     {
         goto end;
     }

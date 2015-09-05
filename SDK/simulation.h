@@ -6,7 +6,7 @@
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */
 
-typedef int (* TSimulationInit)(void **);
+typedef int (* TSimulationInit)(unsigned int, unsigned long, unsigned long, void **);
 typedef int (* TRunInit)(void *);
 typedef int (* TEventInit)(void *, void *);
 typedef void (* TEventRun)(void *);
