@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include "simulation.h"
 
-int SimulationInit(unsigned int nThreads, unsigned long nEvents, unsigned long fistEvent, void ** context)
+int SimulationInit(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** context)
 {
     /* Nothing to do */
     return 0;
