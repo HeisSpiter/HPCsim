@@ -327,7 +327,7 @@ int main(int argc, char * argv[])
     TThreadsFactory::GetInstance()->WaitForAllThreads();
 
 #ifdef USE_PILOT_THREAD
-    delete contexts;
+    delete[] contexts;
 #endif
 
     /* Signal end of run */
