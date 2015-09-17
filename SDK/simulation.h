@@ -6,6 +6,17 @@
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */
 
+#ifdef HAVE_STDINT_H
+#ifdef __cpluplus
+#include <cstdint>
+#else
+#include <stdint.h>
+#endif
+#else
+typedef unsigned char uint8_t;
+typedef unsigned int uint32_t;
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -64,9 +75,9 @@ typedef void (* TSimulationUnload)(void * context);
 
 typedef struct TResult
 {
-    unsigned char fId[SHA384_DIGEST_LENGTH];
-    unsigned short fResultLength;
-    unsigned char fResult[0x800];
+    uint8_t fId[SHA384_DIGEST_LENGTH];
+    uint32_t fResultLength;
+    uint8_t fResult[0x800];
 } TResult;
 
 /**

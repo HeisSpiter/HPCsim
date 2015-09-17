@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         }
 
         /* Sanity check: verify we have correct length */
-        if (fread(&len, sizeof(unsigned short), 1, inFD) != 1)
+        if (fread(&len, sizeof(uint32_t), 1, inFD) != 1)
         {
             break;
         }
