@@ -317,7 +317,7 @@ int main(int argc, char * argv[])
     {
         context->fSimulationContext = simulationContext;
         context->fEvents = eventsPerThread + ((thread < padding) ? 1 : 0);
-        TThreadsFactory::GetInstance()->CreateThread(simulationContext, context);
+        TThreadsFactory::GetInstance()->CreateThread(SimulationLoop, context);
 
         ++context;
     }
