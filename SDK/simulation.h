@@ -30,13 +30,13 @@ extern "C"
  * @param context Output variable. The user can allocate memory that will be passed to any further call
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (* TSimulationInit)(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** context);
+typedef int (* TSimulationInit)(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext);
 /**
  * Called right before the event loop.
  * @param context The allocated buffer during SimulationInit()
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (* TRunInit)(void * context);
+typedef int (* TRunInit)(void * simContext);
 /**
  * Called right before the event run starts. There's only one call to EventInit() at a time (no concurrency).
  * As such, for performances reasons, keep it as short as possible.
@@ -45,29 +45,29 @@ typedef int (* TRunInit)(void * context);
  * @param eventContext Output variable. The user can allocate memory that will be passed to any further call to event function
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (* TEventInit)(void * context, void * rand, void ** eventContext);
+typedef int (* TEventInit)(void * simContext, void * rand, void ** eventContext);
 /**
  * This is the worker routine for the simulation. Several can run in parallel (only one per event though).
  * @param context The allocated buffer during SimulationInit()
  * @param eventContext The allocated buffer during EventInit()
  */
-typedef void (* TEventRun)(void * context, void * eventContext);
+typedef void (* TEventRun)(void * simContext, void * eventContext);
 /**
  * Called right after the event run, use it to cleanup your event related stuff (such as the event context)
  * @param context The allocated buffer during SimulationInit()
  * @param eventContext The allocated buffer during EventInit()
  */
-typedef void (* TEventClear)(void * context, void * eventContext);
+typedef void (* TEventClear)(void * simContext, void * eventContext);
 /**
  * Called right after the run finishes (after the last event was proceed)
  * @param context The allocated buffer during SimulationInit()
  */
-typedef void (* TRunClear)(void * context);
+typedef void (* TRunClear)(void * simContext);
 /**
  * Called before HPCsim end. Use it to deallocate anything you would have allocated.
  * @param context The allocated buffer during SimulationInit()
  */
-typedef void (* TSimulationUnload)(void * context);
+typedef void (* TSimulationUnload)(void * simContext);
 
 #ifndef SHA384_DIGEST_LENGTH
 #define SHA384_DIGEST_LENGTH 48
