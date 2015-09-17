@@ -37,6 +37,37 @@ typedef int (* TSimulationInit)(unsigned int nThreads, unsigned long nEvents, un
  * @return -1 in case of error, 0 otherwise
  */
 typedef int (* TRunInit)(void * simContext);
+#ifdef USE_PILOT_THREAD
+/**
+ *
+ */
+typedef int (* TPilotInit)(void * simContext, void ** pilotContext);
+/**
+ * Called right before the event run starts. There's only one call to EventInit() at a time (no concurrency).
+ * As such, for performances reasons, keep it as short as possible.
+ * @param context The allocated buffer during SimulationInit()
+ * @param rand Random context, to be used with RandU01() and QueueResult()
+ * @param eventContext Output variable. The user can allocate memory that will be passed to any further call to event function
+ * @return -1 in case of error, 0 otherwise
+ */
+typedef int (* TEventInit)(void * simContext, void * pilotContext, void * rand, void ** eventContext);
+/**
+ * This is the worker routine for the simulation. Several can run in parallel (only one per event though).
+ * @param context The allocated buffer during SimulationInit()
+ * @param eventContext The allocated buffer during EventInit()
+ */
+typedef void (* TEventRun)(void * simContext, void * pilotContext, void * eventContext);
+/**
+ * Called right after the event run, use it to cleanup your event related stuff (such as the event context)
+ * @param context The allocated buffer during SimulationInit()
+ * @param eventContext The allocated buffer during EventInit()
+ */
+typedef void (* TEventClear)(void * simContext, void * pilotContext, void * eventContext);
+/**
+ *
+ */
+typedef void (* TPilotClear)(void * simContext, void * pilotContext);
+#else
 /**
  * Called right before the event run starts. There's only one call to EventInit() at a time (no concurrency).
  * As such, for performances reasons, keep it as short as possible.
@@ -58,6 +89,7 @@ typedef void (* TEventRun)(void * simContext, void * eventContext);
  * @param eventContext The allocated buffer during EventInit()
  */
 typedef void (* TEventClear)(void * simContext, void * eventContext);
+#endif
 /**
  * Called right after the run finishes (after the last event was proceed)
  * @param context The allocated buffer during SimulationInit()

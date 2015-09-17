@@ -30,9 +30,15 @@ struct TSimulationAddresses
 {
     TSimulationInit fSimulationInit;
     TRunInit fRunInit;
+#ifdef USE_PILOT_THREAD
+    TPilotInit fPilotInit;
+#endif
     TEventInit fEventInit;
     TEventRun fEventRun;
     TEventClear fEventClear;
+#ifdef USE_PILOT_THREAD
+    TPilotClear fPilotClear;
+#endif
     TRunClear fRunClear;
     TSimulationUnload fSimulationUnload;
 };
@@ -82,6 +88,14 @@ static void * SimulationLoop(void * Arg)
 #ifdef USE_PILOT_THREAD
     TPilotJobContext * context = reinterpret_cast<TPilotJobContext *>(Arg);
     void * simulationContext = context->fSimulationContext;
+    void * pilotContext;
+
+    /* Init the pilot */
+    if (gSimulation.fPilotInit(simulationContext, &pilotContext) < 0)
+    {
+        sem_post(TThreadsFactory::GetInstance()->GetInitLock());
+        return 0;
+    }
 
     for (unsigned long event = 0; event < context->fEvents; ++event)
 #else
@@ -92,7 +106,11 @@ static void * SimulationLoop(void * Arg)
         RngStream rand;
 
         /* Init the event */
+#ifdef USE_PILOT_THREAD
+        if (gSimulation.fEventInit(simulationContext, pilotContext, &rand, &eventContext) < 0)
+#else
         if (gSimulation.fEventInit(simulationContext, &rand, &eventContext) < 0)
+#endif
         {
 #ifdef USE_PILOT_THREAD
             continue;
@@ -106,17 +124,27 @@ static void * SimulationLoop(void * Arg)
         sem_post(TThreadsFactory::GetInstance()->GetInitLock());
 
         /* Call the simulation */
+#ifdef USE_PILOT_THREAD
+        gSimulation.fEventRun(simulationContext, pilotContext, eventContext);
+#else
         gSimulation.fEventRun(simulationContext, eventContext);
+#endif
 
 #ifdef USE_PILOT_THREAD
         sem_wait(TThreadsFactory::GetInstance()->GetInitLock());
 #endif
 
         /* Notify end of event */
+#ifdef USE_PILOT_THREAD
+        gSimulation.fEventClear(simulationContext, pilotContext, eventContext);
+#else
         gSimulation.fEventClear(simulationContext, eventContext);
+#endif
     }
 
 #ifdef USE_PILOT_THREAD
+    gSimulation.fPilotClear(simulationContext, pilotContext);
+
     sem_post(TThreadsFactory::GetInstance()->GetInitLock());
 #endif
 
@@ -249,9 +277,15 @@ int main(int argc, char * argv[])
     /* Load its functions */
     LoadAndSetSimulationFunction(SimulationInit);
     LoadAndSetSimulationFunction(RunInit);
+#ifdef USE_PILOT_THREAD
+    LoadAndSetSimulationFunction(PilotInit);
+#endif
     LoadAndSetSimulationFunction(EventInit);
     LoadAndSetSimulationFunction(EventRun);
     LoadAndSetSimulationFunction(EventClear);
+#ifdef USE_PILOT_THREAD
+    LoadAndSetSimulationFunction(PilotClear);
+#endif
     LoadAndSetSimulationFunction(RunClear);
     LoadAndSetSimulationFunction(SimulationUnload);
 
