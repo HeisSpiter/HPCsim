@@ -9,19 +9,31 @@
 #include <stdlib.h>
 #include "simulation.h"
 
-int SimulationInit(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** context)
+int SimulationInit(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
 {
     /* Nothing to do */
     return 0;
 }
 
-int RunInit(void * context)
+int RunInit(void * simContext)
 {
     /* Nothing to do */
     return 0;
 }
 
-int EventInit(void * context, void * rand, void ** eventContext)
+#ifdef USE_PILOT_THREAD
+int PilotInit(void * simContext, void ** pilotContext)
+{
+    /* Nothing to do */
+    return 0;
+}
+#endif
+
+#ifdef USE_PILOT_THREAD
+int EventInit(void * simContext, void * pilotContext, void * rand, void ** eventContext)
+#else
+int EventInit(void * simContext, void * rand, void ** eventContext)
+#endif
 {
     /* Only save the rand pointer */
     *eventContext = rand;
@@ -29,7 +41,11 @@ int EventInit(void * context, void * rand, void ** eventContext)
     return 0;
 }
 
-void EventRun(void * context, void * eventContext)
+#ifdef USE_PILOT_THREAD
+void EventRun(void * simContext, void * pilotContext, void * eventContext)
+#else
+void EventRun(void * simContext, void * eventContext)
+#endif
 {
     double total, inside;
     TResult result;
@@ -59,19 +75,29 @@ void EventRun(void * context, void * eventContext)
     return;
 }
 
-void EventClear(void * context, void * eventContext)
+#ifdef USE_PILOT_THREAD
+void EventClear(void * simContext, void * pilotContext, void * eventContext)
+#else
+void EventClear(void * simContext, void * eventContext)
+#endif
 {
     /* Nothing to do */
     return;
 }
 
-void RunClear(void * context)
+void PilotClear(void * simContext, void * pilotContext)
 {
     /* Nothing to do */
     return;
 }
 
-void SimulationUnload(void * context)
+void RunClear(void * simContext)
+{
+    /* Nothing to do */
+    return;
+}
+
+void SimulationUnload(void * simContext)
 {
     /* Nothing to do */
     return;
