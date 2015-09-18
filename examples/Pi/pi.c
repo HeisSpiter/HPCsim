@@ -40,14 +40,12 @@ int PilotInit(void * simContext, void ** pilotContext)
 #endif
 
 #ifdef USE_PILOT_THREAD
-int EventInit(void * simContext, void * pilotContext, void * rand, void ** eventContext)
+int EventInit(void * simContext, void * pilotContext, void ** eventContext)
 #else
-int EventInit(void * simContext, void * rand, void ** eventContext)
+int EventInit(void * simContext, void ** eventContext)
 #endif
 {
-    /* Only save the rand pointer */
-    *eventContext = rand;
-
+    /* Nothing to do */
     return 0;
 }
 
@@ -63,8 +61,8 @@ void EventRun(void * simContext, void * eventContext)
     /* We'll compute 10,000 values on each thread */
     for (total = 0, inside = 0; total < 10000; ++total)
     {
-        double x = RandU01(eventContext);
-        double y = RandU01(eventContext);
+        double x = RandU01();
+        double y = RandU01();
 
         if (x * x + y * y < 1.0)
         {
@@ -80,7 +78,7 @@ void EventRun(void * simContext, void * eventContext)
     ((double *)result.fResult)[1] = inside;
 
     /* Write the result */
-    QueueResult(&result, eventContext);
+    QueueResult(&result);
 
     return;
 }

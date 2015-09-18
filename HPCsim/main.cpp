@@ -60,6 +60,7 @@ static const unsigned char gUsingPilot = 1;
 #else
 static const unsigned char gUsingPilot = 0;
 #endif
+static __thread RngStream * tRand = 0;
 
 #define LoadAndSetSimulationFunction(name)                      \
     gSimulation.f##name = (T##name)dlsym(simulationLib, #name); \
@@ -69,20 +70,16 @@ static const unsigned char gUsingPilot = 0;
     }
 
 /* Exported */
-extern "C" double RandU01(void * context)
+extern "C" double RandU01(void)
 {
-    RngStream * rand = reinterpret_cast<RngStream *>(context);
-
-    return rand->RandU01();
+    tRand->RandU01();
 }
 
 /* Exported */
-extern "C" void QueueResult(TResult * result, void * context)
+extern "C" void QueueResult(TResult * result)
 {
-    RngStream * rand = reinterpret_cast<RngStream *>(context);
-
     /* Set our ID first, and send to write thread */
-    memcpy(result->fId, rand->GetDigest(), sizeof(TResult::fId));
+    memcpy(result->fId, tRand->GetDigest(), sizeof(TResult::fId));
     pthread_mutex_lock(&gPipeLock);
     write(gPipe[1], result, sizeof(TResult));
     pthread_mutex_unlock(&gPipeLock);
@@ -110,11 +107,12 @@ static void * SimulationLoop(void * Arg)
         void * eventContext;
         RngStream rand;
 
+        tRand = &rand;
         /* Init the event */
 #ifdef USE_PILOT_THREAD
-        if (gSimulation.fEventInit(simulationContext, pilotContext, &rand, &eventContext) < 0)
+        if (gSimulation.fEventInit(simulationContext, pilotContext, &eventContext) < 0)
 #else
-        if (gSimulation.fEventInit(simulationContext, &rand, &eventContext) < 0)
+        if (gSimulation.fEventInit(simulationContext, &eventContext) < 0)
 #endif
         {
 #ifdef USE_PILOT_THREAD
@@ -141,6 +139,8 @@ static void * SimulationLoop(void * Arg)
 #else
         gSimulation.fEventClear(simulationContext, eventContext);
 #endif
+
+        tRand = 0;
 
 #ifdef USE_PILOT_THREAD
         sem_wait(TThreadsFactory::GetInstance()->GetInitLock());

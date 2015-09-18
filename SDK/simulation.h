@@ -51,11 +51,10 @@ typedef int (* TPilotInit)(void * simContext, void ** pilotContext);
  * As such, for performances reasons, keep it as short as possible.
  * @param simContext The allocated buffer during SimulationInit()
  * @param pilotContext The allocated buffer during PilotInit()
- * @param rand Random context, to be used with RandU01() and QueueResult()
  * @param eventContext Output variable. The user can allocate memory that will be passed to any further call to event function
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (* TEventInit)(void * simContext, void * pilotContext, void * rand, void ** eventContext);
+typedef int (* TEventInit)(void * simContext, void * pilotContext, void ** eventContext);
 /**
  * This is the worker routine for the simulation. Several can run in parallel (only one per event though).
  * @param simContext The allocated buffer during SimulationInit()
@@ -81,11 +80,10 @@ typedef void (* TPilotClear)(void * simContext, void * pilotContext);
  * Called right before the event run starts. There's only one call to EventInit() at a time (no concurrency).
  * As such, for performances reasons, keep it as short as possible.
  * @param simContext The allocated buffer during SimulationInit()
- * @param rand Random context, to be used with RandU01() and QueueResult()
  * @param eventContext Output variable. The user can allocate memory that will be passed to any further call to event function
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (* TEventInit)(void * simContext, void * rand, void ** eventContext);
+typedef int (* TEventInit)(void * simContext, void ** eventContext);
 /**
  * This is the worker routine for the simulation. Several can run in parallel (only one per event though).
  * @param simContext The allocated buffer during SimulationInit()
@@ -123,18 +121,20 @@ typedef struct TResult
 
 /**
  * Exported function for the user. It allows drawing a PRN in the context
- * of an event.
- * @param rand Random context, received on the EventInit() call.
+ * of an event, using the pseudo-random stream associated to the event.
+ * You cannot (and have not to) call it outside an event run. It can only be
+ * called during EventInit(), EventRun(), EventClear().
  * @return a number between 0 & 1, uniformely distributed.
  */
-double RandU01(void * rand);
+double RandU01(void);
 /**
  * Exported function for the user. It allows queueing a result for defered
- * writing.
+ * writing. It will be written with the ID associated to the current event.
+ * You cannot (and have not to) call it outside an event run. It can only be
+ * called during EventInit(), EventRun(), EventClear().
  * @param result The result to write. fId isn't to be completed by the user.
- * @param rand The event context, as received on the EventInit() call.
  */
-void QueueResult(TResult * result, void * rand);
+void QueueResult(TResult * result);
 
 #ifdef __cplusplus
 }
