@@ -9,10 +9,20 @@
 #include <stdlib.h>
 #include "simulation.h"
 
-int SimulationInit(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
+int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
 {
-    /* Nothing to do */
+    /* Check we're running in the context we where built for */
+#ifdef USE_PILOT_THREAD
+    if (!isPilot)
+        return -1;
+
     return 0;
+#else
+    if (isPilot)
+        return -1;
+
+    return 0;
+#endif
 }
 
 int RunInit(void * simContext)

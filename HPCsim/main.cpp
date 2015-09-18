@@ -55,6 +55,11 @@ static pthread_mutex_t gPipeLock;
 static int gPipe[2];
 static TResult gNullResult;
 static TSimulationAddresses gSimulation;
+#ifdef USE_PILOT_THREAD
+static const unsigned char gUsingPilot = 1;
+#else
+static const unsigned char gUsingPilot = 0;
+#endif
 
 #define LoadAndSetSimulationFunction(name)                      \
     gSimulation.f##name = (T##name)dlsym(simulationLib, #name); \
@@ -290,7 +295,7 @@ int main(int argc, char * argv[])
     LoadAndSetSimulationFunction(SimulationUnload);
 
     /* Init the simulation */
-    if (gSimulation.fSimulationInit(nThreads, nEvents, firstEvent, &simulationContext) < 0)
+    if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &simulationContext) < 0)
     {
         std::cerr << "Failed initializing library" << std::endl;
         goto end;

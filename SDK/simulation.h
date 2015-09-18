@@ -24,13 +24,14 @@ extern "C"
 
 /**
  * Called right after the simulation has been loaded.
+ * @param isPilot Set to 1 if HPCsim was built with USE_PILOT_THREAD, to 0 otherwise
  * @param nThreads Number of concurrent threads that will be created
  * @param nEvents Total number of events proceed
  * @param firstEvent The number of events skipped
  * @param simContext Output variable. The user can allocate memory that will be passed to any further call
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (* TSimulationInit)(unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext);
+typedef int (* TSimulationInit)(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext);
 /**
  * Called right before the event loop.
  * @param simContext The allocated buffer during SimulationInit()
