@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:        See LICENSE in the top level directory
  * PROJECT:          PI simulation
- * FILE:             examples/Pi/pi.c
+ * FILE:             examples/Pi/result.c
  * PURPOSE:          Read results and print Pi
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */
