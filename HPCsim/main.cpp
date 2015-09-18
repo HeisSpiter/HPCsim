@@ -130,15 +130,15 @@ static void * SimulationLoop(void * Arg)
         gSimulation.fEventRun(simulationContext, eventContext);
 #endif
 
-#ifdef USE_PILOT_THREAD
-        sem_wait(TThreadsFactory::GetInstance()->GetInitLock());
-#endif
-
         /* Notify end of event */
 #ifdef USE_PILOT_THREAD
         gSimulation.fEventClear(simulationContext, pilotContext, eventContext);
 #else
         gSimulation.fEventClear(simulationContext, eventContext);
+#endif
+
+#ifdef USE_PILOT_THREAD
+        sem_wait(TThreadsFactory::GetInstance()->GetInitLock());
 #endif
     }
 
