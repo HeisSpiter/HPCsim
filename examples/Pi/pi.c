@@ -9,6 +9,10 @@
 #include <stdlib.h>
 #include "simulation.h"
 
+/* Sanity check for our entry points */
+TSimulationInit SimulationInit;
+TEventRun EventRun;
+
 int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
 {
     /* Check we're running in the context we where built for */

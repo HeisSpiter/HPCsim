@@ -28,19 +28,19 @@
 
 struct TSimulationAddresses
 {
-    TSimulationInit fSimulationInit;
-    TRunInit fRunInit;
+    TSimulationInit * fSimulationInit;
+    TRunInit * fRunInit;
 #ifdef USE_PILOT_THREAD
-    TPilotInit fPilotInit;
+    TPilotInit * fPilotInit;
 #endif
-    TEventInit fEventInit;
-    TEventRun fEventRun;
-    TEventClear fEventClear;
+    TEventInit * fEventInit;
+    TEventRun * fEventRun;
+    TEventClear * fEventClear;
 #ifdef USE_PILOT_THREAD
-    TPilotClear fPilotClear;
+    TPilotClear * fPilotClear;
 #endif
-    TRunClear fRunClear;
-    TSimulationUnload fSimulationUnload;
+    TRunClear * fRunClear;
+    TSimulationUnload * fSimulationUnload;
 };
 
 #ifdef USE_PILOT_THREAD
@@ -62,8 +62,8 @@ static const unsigned char gUsingPilot = 0;
 #endif
 static __thread RngStream * tRand = 0;
 
-#define LoadAndSetSimulationFunction(name)                      \
-    gSimulation.f##name = (T##name)dlsym(simulationLib, #name);
+#define LoadAndSetSimulationFunction(name)                       \
+    gSimulation.f##name = (T##name *)dlsym(simulationLib, #name)
 
 /* Exported */
 extern "C" double RandU01(void)
