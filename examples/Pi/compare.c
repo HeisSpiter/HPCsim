@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
             int i;
             char digestStr[SHA384_DIGEST_LENGTH*2+1];
 
-            for (int i = 0; i < SHA384_DIGEST_LENGTH; i++)
+            for (i = 0; i < SHA384_DIGEST_LENGTH; i++)
             {
                 sprintf(&digestStr[i * 2], "%02x", (unsigned int)id1[i]);
             }
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
                 int i;
                 char digestStr[SHA384_DIGEST_LENGTH*2+1];
 
-                for (int i = 0; i < SHA384_DIGEST_LENGTH; i++)
+                for (i = 0; i < SHA384_DIGEST_LENGTH; i++)
                 {
                     sprintf(&digestStr[i * 2], "%02x", (unsigned int)id1[i]);
                 }
