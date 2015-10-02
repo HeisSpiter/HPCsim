@@ -25,30 +25,6 @@ int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long n
 #endif
 }
 
-int RunInit(void * simContext)
-{
-    /* Nothing to do */
-    return 0;
-}
-
-#ifdef USE_PILOT_THREAD
-int PilotInit(void * simContext, void ** pilotContext)
-{
-    /* Nothing to do */
-    return 0;
-}
-#endif
-
-#ifdef USE_PILOT_THREAD
-int EventInit(void * simContext, void * pilotContext, void ** eventContext)
-#else
-int EventInit(void * simContext, void ** eventContext)
-#endif
-{
-    /* Nothing to do */
-    return 0;
-}
-
 #ifdef USE_PILOT_THREAD
 void EventRun(void * simContext, void * pilotContext, void * eventContext)
 #else
@@ -80,33 +56,5 @@ void EventRun(void * simContext, void * eventContext)
     /* Write the result */
     QueueResult(&result);
 
-    return;
-}
-
-#ifdef USE_PILOT_THREAD
-void EventClear(void * simContext, void * pilotContext, void * eventContext)
-#else
-void EventClear(void * simContext, void * eventContext)
-#endif
-{
-    /* Nothing to do */
-    return;
-}
-
-void PilotClear(void * simContext, void * pilotContext)
-{
-    /* Nothing to do */
-    return;
-}
-
-void RunClear(void * simContext)
-{
-    /* Nothing to do */
-    return;
-}
-
-void SimulationUnload(void * simContext)
-{
-    /* Nothing to do */
     return;
 }

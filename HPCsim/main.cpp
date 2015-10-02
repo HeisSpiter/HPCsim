@@ -63,11 +63,7 @@ static const unsigned char gUsingPilot = 0;
 static __thread RngStream * tRand = 0;
 
 #define LoadAndSetSimulationFunction(name)                      \
-    gSimulation.f##name = (T##name)dlsym(simulationLib, #name); \
-    if (gSimulation.f##name == 0) {                             \
-        std::cerr << "Failed loading " << #name << std::endl;   \
-        goto end;                                               \
-    }
+    gSimulation.f##name = (T##name)dlsym(simulationLib, #name);
 
 /* Exported */
 extern "C" double RandU01(void)
@@ -90,10 +86,11 @@ static void * SimulationLoop(void * Arg)
 #ifdef USE_PILOT_THREAD
     TPilotJobContext * context = reinterpret_cast<TPilotJobContext *>(Arg);
     void * simulationContext = context->fSimulationContext;
-    void * pilotContext;
+    void * pilotContext = 0;
 
     /* Init the pilot */
-    if (gSimulation.fPilotInit(simulationContext, &pilotContext) < 0)
+    if (gSimulation.fPilotInit != 0 &&
+        gSimulation.fPilotInit(simulationContext, &pilotContext) < 0)
     {
         sem_post(TThreadsFactory::GetInstance()->GetInitLock());
         return 0;
@@ -104,15 +101,17 @@ static void * SimulationLoop(void * Arg)
     void * simulationContext = reinterpret_cast<void *>(Arg);
 #endif
     {
-        void * eventContext;
+        void * eventContext = 0;
         RngStream rand;
 
         tRand = &rand;
         /* Init the event */
 #ifdef USE_PILOT_THREAD
-        if (gSimulation.fEventInit(simulationContext, pilotContext, &eventContext) < 0)
+        if (gSimulation.fEventInit != 0 &&
+            gSimulation.fEventInit(simulationContext, pilotContext, &eventContext) < 0)
 #else
-        if (gSimulation.fEventInit(simulationContext, &eventContext) < 0)
+        if (gSimulation.fEventInit != 0 &&
+            gSimulation.fEventInit(simulationContext, &eventContext) < 0)
 #endif
         {
 #ifdef USE_PILOT_THREAD
@@ -134,11 +133,14 @@ static void * SimulationLoop(void * Arg)
 #endif
 
         /* Notify end of event */
+        if (gSimulation.fEventClear != 0)
+        {
 #ifdef USE_PILOT_THREAD
-        gSimulation.fEventClear(simulationContext, pilotContext, eventContext);
+            gSimulation.fEventClear(simulationContext, pilotContext, eventContext);
 #else
-        gSimulation.fEventClear(simulationContext, eventContext);
+            gSimulation.fEventClear(simulationContext, eventContext);
 #endif
+        }
 
         tRand = 0;
 
@@ -148,7 +150,10 @@ static void * SimulationLoop(void * Arg)
     }
 
 #ifdef USE_PILOT_THREAD
-    gSimulation.fPilotClear(simulationContext, pilotContext);
+    if (gSimulation.fPilotClear != 0)
+    {
+        gSimulation.fPilotClear(simulationContext, pilotContext);
+    }
 
     sem_post(TThreadsFactory::GetInstance()->GetInitLock());
 #endif
@@ -203,7 +208,7 @@ int main(int argc, char * argv[])
     pthread_t writingThread;
     void * ret;
     void * simulationLib;
-    void * simulationContext;
+    void * simulationContext = 0;
 #ifdef USE_PILOT_THREAD
     unsigned long eventsPerThread = 0;
     unsigned long padding = 0;
@@ -294,8 +299,16 @@ int main(int argc, char * argv[])
     LoadAndSetSimulationFunction(RunClear);
     LoadAndSetSimulationFunction(SimulationUnload);
 
+    /* We need at least something to run */
+    if (gSimulation.fEventRun == 0)
+    {
+        std::cerr << "No EventRun() entry point present" << std::endl;
+        goto end;
+    }
+
     /* Init the simulation */
-    if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &simulationContext) < 0)
+    if (gSimulation.fSimulationInit != 0 &&
+        gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &simulationContext) < 0)
     {
         std::cerr << "Failed initializing library" << std::endl;
         goto end;
@@ -329,7 +342,8 @@ int main(int argc, char * argv[])
     }
 
     /* Initialize the run */
-    if (gSimulation.fRunInit(simulationContext) < 0)
+    if (gSimulation.fRunInit != 0 &&
+        gSimulation.fRunInit(simulationContext) < 0)
     {
         std::cerr << "Failed initializing run" << std::endl;
         goto end4;
@@ -370,7 +384,10 @@ int main(int argc, char * argv[])
 #endif
 
     /* Signal end of run */
-    gSimulation.fRunClear(simulationContext);
+    if (gSimulation.fRunClear != 0)
+    {
+        gSimulation.fRunClear(simulationContext);
+    }
 
 end4:
     /* Send the end signal to writer */
@@ -384,7 +401,10 @@ end3:
     close(gPipe[1]);
 end2:
     pthread_mutex_destroy(&gPipeLock);
-    gSimulation.fSimulationUnload(simulationContext);
+    if (gSimulation.fSimulationUnload != 0)
+    {
+        gSimulation.fSimulationUnload(simulationContext);
+    }
 end:
     dlclose(simulationLib);
     return 0;
