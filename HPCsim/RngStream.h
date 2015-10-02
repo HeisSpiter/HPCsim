@@ -7,7 +7,9 @@
 #include <cstring>
 #include "simulation.h"
 
-#define STATIC_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
+#if __cplusplus <= 199711L
+#define static_assert(e, m) typedef char __C_ASSERT__[(e)?1:-1]
+#endif
 
 class RngStream
 {
@@ -66,7 +68,7 @@ double Cg[6], Bg[6], Ig[6];
 
 
 unsigned char digest[ID_FIELD_SIZE];
-STATIC_ASSERT(sizeof(Cg) == sizeof(digest));
+static_assert(sizeof(Cg) == sizeof(digest), "Mismatching sizes");
 
 
 bool anti, incPrec;
