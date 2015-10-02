@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     do
     {
         /* Skip ID */
-        if (fseek(inFD, SHA384_DIGEST_LENGTH, SEEK_CUR) == -1)
+        if (fseek(inFD, ID_FIELD_SIZE, SEEK_CUR) == -1)
         {
             break;
         }

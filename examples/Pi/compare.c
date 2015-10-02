@@ -17,8 +17,8 @@
 int main(int argc, char *argv[])
 {
     FILE * file1, * file2;
-    char id1[SHA384_DIGEST_LENGTH];
-    char id2[SHA384_DIGEST_LENGTH];
+    char id1[ID_FIELD_SIZE];
+    char id2[ID_FIELD_SIZE];
     uint32_t len;
     double res1[2], res2[2];
     unsigned char found;
@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
         if (found == 0)
         {
             int i;
-            char digestStr[SHA384_DIGEST_LENGTH*2+1];
+            char digestStr[ID_FIELD_SIZE*2+1];
 
-            for (i = 0; i < SHA384_DIGEST_LENGTH; i++)
+            for (i = 0; i < ID_FIELD_SIZE; i++)
             {
                 sprintf(&digestStr[i * 2], "%02x", (unsigned int)id1[i]);
             }
@@ -128,9 +128,9 @@ int main(int argc, char *argv[])
                 fabs(res1[1] - res2[1]) > DBL_EPSILON)
             {
                 int i;
-                char digestStr[SHA384_DIGEST_LENGTH*2+1];
+                char digestStr[ID_FIELD_SIZE*2+1];
 
-                for (i = 0; i < SHA384_DIGEST_LENGTH; i++)
+                for (i = 0; i < ID_FIELD_SIZE; i++)
                 {
                     sprintf(&digestStr[i * 2], "%02x", (unsigned int)id1[i]);
                 }

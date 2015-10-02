@@ -4,7 +4,10 @@
 #define RNGSTREAM_H
  
 #include <string>
-#include "sha2.h"
+#include <cstring>
+#include "simulation.h"
+
+#define STATIC_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
 
 class RngStream
 {
@@ -62,7 +65,8 @@ private:
 double Cg[6], Bg[6], Ig[6];
 
 
-unsigned char digest[SHA384_DIGEST_LENGTH];
+unsigned char digest[ID_FIELD_SIZE];
+STATIC_ASSERT(sizeof(Cg) == sizeof(digest));
 
 
 bool anti, incPrec;

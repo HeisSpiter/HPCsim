@@ -1,4 +1,4 @@
-add_executable(HPCsim main.cpp RngStream.cpp sha2.c TThreadsFactory.cpp)
+add_executable(HPCsim main.cpp RngStream.cpp TThreadsFactory.cpp)
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC HPCsim "-pthread")
 endif()

@@ -111,13 +111,11 @@ typedef void (* TRunClear)(void * simContext);
  */
 typedef void (* TSimulationUnload)(void * simContext);
 
-#ifndef SHA384_DIGEST_LENGTH
-#define SHA384_DIGEST_LENGTH 48
-#endif
+#define ID_FIELD_SIZE (6 * sizeof(double))
 
 typedef struct TResult
 {
-    uint8_t fId[SHA384_DIGEST_LENGTH];
+    uint8_t fId[ID_FIELD_SIZE];
     uint32_t fResultLength;
     uint8_t fResult[0x800];
 } TResult;

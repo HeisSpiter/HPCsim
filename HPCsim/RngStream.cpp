@@ -316,7 +316,7 @@ RngStream::RngStream (const char *s) : name (s)
       Bg[i] = Cg[i] = Ig[i] = nextSeed[i];
    }
 
-   SHA384((const u_int8_t *)Cg, sizeof(Cg), (u_int8_t *)digest);
+   memcpy(digest, Cg, sizeof(digest));
 
    MatVecModM (A1p127, nextSeed, nextSeed, m1);
    MatVecModM (A2p127, &nextSeed[3], &nextSeed[3], m2);
@@ -373,7 +373,7 @@ bool RngStream::SetSeed (const unsigned long seed[6])
       return false;                   // FAILURE     
    for (int i = 0; i < 6; ++i)
       Cg[i] = Bg[i] = Ig[i] = seed[i];
-   SHA384((const u_int8_t *)Cg, sizeof(Cg), (u_int8_t *)digest);
+   memcpy(digest, Cg, sizeof(digest));
    return true;                       // SUCCESS
 }
 
