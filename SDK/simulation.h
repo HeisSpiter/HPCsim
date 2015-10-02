@@ -6,6 +6,9 @@
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */
 
+#ifndef __SIMULATION_H__
+#define __SIMULATION_H__
+
 #ifdef HAVE_STDINT_H
 #ifdef __cpluplus
 #include <cstdint>
@@ -138,4 +141,6 @@ void QueueResult(TResult * result);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
