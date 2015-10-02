@@ -54,5 +54,3 @@ David R.C. Hill for his PhD supervision, and his article:
 Hill R.C., D. (2015), "Parallel Random Numbers, Science and reproducibility", in IEEE Computing in Science and Engineering, 17(4) pp: 66-71.
 
 Pierre l'Ecuyer for his packaging of MRG2k3a as RngStream which is the heart of the HPCsim framework.
-
-Aaron Gifford for his lightweight SHA hash library which was the missing piece of easy porting to Xeon Phi. It's been slightly modified locally and patch sent upstream.
