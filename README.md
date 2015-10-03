@@ -1,4 +1,4 @@
-# HPCsim
+# HPCsim [![Build Status](https://travis-ci.org/HeisSpiter/HPCsim.svg?label=Build%20Status)](https://travis-ci.org/HeisSpiter/HPCsim)
 
 HPCsim is lightweight framework for Monte Carlo simulations in the HPC field.
 
