@@ -14,6 +14,7 @@ install:
   - mkdir cmake
   - cd cmake
   - wget -qO- http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-x86_64.tar.gz | tar xvz
+  - cd ..
 
 script:
   - mkdir build
