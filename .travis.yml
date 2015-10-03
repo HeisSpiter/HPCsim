@@ -3,9 +3,12 @@ language: cpp
 compiler:
   - gcc
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq cmake
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - cmake
 
 script:
   - mkdir build
