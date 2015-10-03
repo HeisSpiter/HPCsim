@@ -10,16 +10,21 @@ addons:
     packages:
     - cmake
 
+install:
+  - mkdir cmake
+  - cd cmake
+  - wget -qO- http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-x86_64.tar.gz | tar xvz
+
 script:
   - mkdir build
   - cd build
-  - cmake ../
+  - ../cmake/cmake-3.1.0-Linux-x86_64/bin/cmake ../
   - make -j4
   - ./HPCsim/HPCsim -s examples/Pi/libPi.so
   - cd ../
   - mkdir build_pilot
   - cd build_pilot
-  - cmake -DUSE_PILOT_THREAD=1 ../
+  - ../cmake/cmake-3.1.0-Linux-x86_64/bin/cmake -DUSE_PILOT_THREAD=1 ../
   - make -j4
   - ./HPCsim/HPCsim -s examples/Pi/libPi.so
   - ./examples/Pi/ComparePi ../build/HPCsim.out ./HPCsim.out
