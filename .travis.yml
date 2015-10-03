@@ -1,0 +1,22 @@
+language: cpp
+
+compiler:
+  - gcc
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq cmake
+
+script:
+  - mkdir build
+  - cd build
+  - cmake ../
+  - make -j4
+  - ./HPCsim/HPCsim -s examples/Pi/libPi.so
+  - cd ../
+  - mkdir build_pilot
+  - cd build_pilot
+  - cmake -DUSE_PILOT_THREAD=1 ../
+  - make -j4
+  - ./HPCsim/HPCsim -s examples/Pi/libPi.so
+  - ./examples/Pi/ComparePi ../build/HPCsim.out ./HPCsim.out
