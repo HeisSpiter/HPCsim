@@ -47,7 +47,6 @@ struct TSimulationAddresses
 struct TPilotJobContext
 {
     unsigned long fEvents;
-    void * fSimulationContext;
 };
 #endif
 
@@ -55,6 +54,7 @@ static pthread_mutex_t gPipeLock;
 static int gPipe[2];
 static TResult gNullResult;
 static TSimulationAddresses gSimulation;
+static void * gSimulationContext = 0;
 #ifdef USE_PILOT_THREAD
 static const unsigned char gUsingPilot = 1;
 #else
@@ -85,20 +85,17 @@ static void * SimulationLoop(void * Arg)
 {
 #ifdef USE_PILOT_THREAD
     TPilotJobContext * context = reinterpret_cast<TPilotJobContext *>(Arg);
-    void * simulationContext = context->fSimulationContext;
     void * pilotContext = 0;
 
     /* Init the pilot */
     if (gSimulation.fPilotInit != 0 &&
-        gSimulation.fPilotInit(simulationContext, &pilotContext) < 0)
+        gSimulation.fPilotInit(gSimulationContext, &pilotContext) < 0)
     {
         sem_post(TThreadsFactory::GetInstance()->GetInitLock());
         return 0;
     }
 
     for (unsigned long event = 0; event < context->fEvents; ++event)
-#else
-    void * simulationContext = reinterpret_cast<void *>(Arg);
 #endif
     {
         void * eventContext = 0;
@@ -108,10 +105,10 @@ static void * SimulationLoop(void * Arg)
         /* Init the event */
 #ifdef USE_PILOT_THREAD
         if (gSimulation.fEventInit != 0 &&
-            gSimulation.fEventInit(simulationContext, pilotContext, &eventContext) < 0)
+            gSimulation.fEventInit(gSimulationContext, pilotContext, &eventContext) < 0)
 #else
         if (gSimulation.fEventInit != 0 &&
-            gSimulation.fEventInit(simulationContext, &eventContext) < 0)
+            gSimulation.fEventInit(gSimulationContext, &eventContext) < 0)
 #endif
         {
 #ifdef USE_PILOT_THREAD
@@ -127,18 +124,18 @@ static void * SimulationLoop(void * Arg)
 
         /* Call the simulation */
 #ifdef USE_PILOT_THREAD
-        gSimulation.fEventRun(simulationContext, pilotContext, eventContext);
+        gSimulation.fEventRun(gSimulationContext, pilotContext, eventContext);
 #else
-        gSimulation.fEventRun(simulationContext, eventContext);
+        gSimulation.fEventRun(gSimulationContext, eventContext);
 #endif
 
         /* Notify end of event */
         if (gSimulation.fEventClear != 0)
         {
 #ifdef USE_PILOT_THREAD
-            gSimulation.fEventClear(simulationContext, pilotContext, eventContext);
+            gSimulation.fEventClear(gSimulationContext, pilotContext, eventContext);
 #else
-            gSimulation.fEventClear(simulationContext, eventContext);
+            gSimulation.fEventClear(gSimulationContext, eventContext);
 #endif
         }
 
@@ -152,7 +149,7 @@ static void * SimulationLoop(void * Arg)
 #ifdef USE_PILOT_THREAD
     if (gSimulation.fPilotClear != 0)
     {
-        gSimulation.fPilotClear(simulationContext, pilotContext);
+        gSimulation.fPilotClear(gSimulationContext, pilotContext);
     }
 
     sem_post(TThreadsFactory::GetInstance()->GetInitLock());
@@ -208,7 +205,6 @@ int main(int argc, char * argv[])
     pthread_t writingThread;
     void * ret;
     void * simulationLib;
-    void * simulationContext = 0;
 #ifdef USE_PILOT_THREAD
     unsigned long eventsPerThread = 0;
     unsigned long padding = 0;
@@ -308,7 +304,7 @@ int main(int argc, char * argv[])
 
     /* Init the simulation */
     if (gSimulation.fSimulationInit != 0 &&
-        gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &simulationContext) < 0)
+        gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &gSimulationContext) < 0)
     {
         std::cerr << "Failed initializing library" << std::endl;
         goto end;
@@ -343,7 +339,7 @@ int main(int argc, char * argv[])
 
     /* Initialize the run */
     if (gSimulation.fRunInit != 0 &&
-        gSimulation.fRunInit(simulationContext) < 0)
+        gSimulation.fRunInit(gSimulationContext) < 0)
     {
         std::cerr << "Failed initializing run" << std::endl;
         goto end4;
@@ -353,7 +349,7 @@ int main(int argc, char * argv[])
     /* Hot loop, the simulation happens here */
     for (unsigned long event = 0; event < nEvents; ++event)
     {
-        TThreadsFactory::GetInstance()->CreateThread(SimulationLoop, simulationContext);
+        TThreadsFactory::GetInstance()->CreateThread(SimulationLoop, 0);
     }
 #else
     /* Alloc once, use multipe times - reduce overhead */
@@ -368,7 +364,6 @@ int main(int argc, char * argv[])
 
     for (unsigned long thread = 0; thread < nThreads; ++thread)
     {
-        context->fSimulationContext = simulationContext;
         context->fEvents = eventsPerThread + ((thread < padding) ? 1 : 0);
         TThreadsFactory::GetInstance()->CreateThread(SimulationLoop, context);
 
@@ -386,7 +381,7 @@ int main(int argc, char * argv[])
     /* Signal end of run */
     if (gSimulation.fRunClear != 0)
     {
-        gSimulation.fRunClear(simulationContext);
+        gSimulation.fRunClear(gSimulationContext);
     }
 
 end4:
@@ -403,7 +398,7 @@ end2:
     pthread_mutex_destroy(&gPipeLock);
     if (gSimulation.fSimulationUnload != 0)
     {
-        gSimulation.fSimulationUnload(simulationContext);
+        gSimulation.fSimulationUnload(gSimulationContext);
     }
 end:
     dlclose(simulationLib);
