@@ -79,4 +79,5 @@ void SimulationUnload(void * simContext)
 
     /* Compute PI for real */
     printf("Pi: %lf (with %lf samples)\n", (4.0 * context->fInside) / context->fTotal, context->fTotal);
+    free(context);
 }
