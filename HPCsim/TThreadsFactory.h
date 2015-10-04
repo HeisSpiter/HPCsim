@@ -42,9 +42,10 @@ public:
     /**
      * This is the static function to have the thread factory. It is unique and this is the only way to
      * create and use it.
+     * @param destroyInstance Indicates whether the instance should be deleted instead of allocated
      * @return A pointer to the thread factory class.
      */
-    static TThreadsFactory * GetInstance();
+    static TThreadsFactory * GetInstance(bool destroyInstance = false);
     /**
      * This function will be invoked automatically at the end of a thread and will mark it as available
      * for the thread factory. So that it can be joined and released.

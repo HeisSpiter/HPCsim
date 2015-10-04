@@ -87,13 +87,20 @@ bool TThreadsFactory::SetMaxThreads(unsigned int maxThreads)
     return true;
 }
 
-TThreadsFactory * TThreadsFactory::GetInstance()
+TThreadsFactory * TThreadsFactory::GetInstance(bool destroyInstance)
 {
     static TThreadsFactory * gThisInstance = 0;
 
     /* If we don't exist yet, start ourselves */
-    if (gThisInstance == 0)
+    if (gThisInstance == 0 && !destroyInstance)
         gThisInstance = new TThreadsFactory();
+
+    /* If we're asked to delete the instance */
+    if (destroyInstance)
+    {
+        delete gThisInstance;
+        gThisInstance = 0;
+    }
 
     /* Return the instance */
     return gThisInstance;

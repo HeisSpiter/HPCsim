@@ -416,6 +416,7 @@ end3:
     close(gPipe[0]);
     close(gPipe[1]);
 end2:
+    TThreadsFactory::GetInstance(true);
     pthread_mutex_destroy(&gPipeLock);
     if (gSimulation.fSimulationUnload != 0)
     {
