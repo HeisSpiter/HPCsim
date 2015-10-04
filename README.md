@@ -6,7 +6,7 @@ It consists in a single executable which contains the simulation core, capable o
 
 The user only has to focus on its modeling and not on the simulation itself.
 
-The simulation core, as currently written, serves three major goals: efficiency, numerical reproducibility, and statistically sound results. That way, each event has its own pseudo-random stream and is identified with the hash of the initial state of such stream. The user doesn't need to know where, how their events where executed. Only the ID matters to uniquely identify the events.
+The simulation core, as currently written, serves three major goals: efficiency, numerical reproducibility, and statistically sound results. That way, each event has its own pseudo-random stream and is identified with the initial state of such stream. The user doesn't need to know where, how their events where executed. Only the ID matters to uniquely identify the events.
 
 Because of its design, this simulation core is well suited for simulations where the simulated objects are independant, such as high energy physics Monte Carlo simulations.
 
