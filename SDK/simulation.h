@@ -148,6 +148,9 @@ double RandU01(void);
  */
 void QueueResult(TResult * result);
 
+#define UNUSED_RETURN(f) if (f) { }
+#define UNUSED_PARAMETER(p) (void)p
+
 #ifdef __cplusplus
 }
 #endif

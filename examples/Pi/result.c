@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     FILE * inFD;
     char resFile[PATH_MAX] = DEFAULT_NAME;
     double inside = 0.0, total = 0.0;
-    unsigned short len;
+    uint32_t len;
     double res[2];
 
     if (argc > 1)

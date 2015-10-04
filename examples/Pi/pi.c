@@ -17,6 +17,11 @@ TEventRun EventRun;
 #ifndef BUILD_WITH_REDUCE
 int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
 {
+    UNUSED_PARAMETER(nThreads);
+    UNUSED_PARAMETER(nEvents);
+    UNUSED_PARAMETER(firstEvent);
+    UNUSED_PARAMETER(simContext);
+
     /* Check we're running in the context we where built for */
 #ifdef USE_PILOT_THREAD
     if (!isPilot)
@@ -40,6 +45,10 @@ void EventRun(void * simContext, void * eventContext)
 {
     double total, inside;
     TResult result;
+    double * resultBuffer;
+
+    UNUSED_PARAMETER(simContext);
+    UNUSED_PARAMETER(eventContext);
 
     /* We'll compute 10,000 values on each thread */
     for (total = 0, inside = 0; total < 10000; ++total)
@@ -57,8 +66,9 @@ void EventRun(void * simContext, void * eventContext)
     result.fResultLength = 2 * sizeof(double);
 
     /* First, total and then inside */
-    ((double *)result.fResult)[0] = total;
-    ((double *)result.fResult)[1] = inside;
+    resultBuffer = (double *)&result.fResult[0];
+    resultBuffer[0] = total;
+    resultBuffer[1] = inside;
 
     /* Write the result */
     QueueResult(&result);

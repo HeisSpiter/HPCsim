@@ -69,7 +69,7 @@ static __thread RngStream * tRand = 0;
 /* Exported */
 extern "C" double RandU01(void)
 {
-    tRand->RandU01();
+    return tRand->RandU01();
 }
 
 /* Exported */
@@ -78,7 +78,7 @@ extern "C" void QueueResult(TResult * result)
     /* Set our ID first, and send to write thread */
     memcpy(result->fId, tRand->GetDigest(), sizeof(TResult::fId));
     pthread_mutex_lock(&gPipeLock);
-    write(gPipe[1], result, sizeof(TResult));
+    UNUSED_RETURN(write(gPipe[1], result, sizeof(TResult)));
     pthread_mutex_unlock(&gPipeLock);
 }
 
@@ -97,6 +97,8 @@ static void * SimulationLoop(void * Arg)
     }
 
     for (unsigned long event = 0; event < context->fEvents; ++event)
+#else
+    UNUSED_PARAMETER(Arg);
 #endif
     {
         void * eventContext = 0;
@@ -165,37 +167,38 @@ static void * WriteResults(void * Arg)
     char * outputFile = reinterpret_cast<char *>(Arg);
     int outFD;
 
-    /* In case the simulation doesn't have a dispatcher for results,
-     * open the output file
-     */
+    /* For performances reason (compiler optimisation, distinguish the two cases) */
     if (gSimulation.fReduceResult == 0)
     {
+        /* Open the output file */
         outFD = open(outputFile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         assert(outFD != -1);
-    }
 
-    /* Read the incoming event */
-    while (read(gPipe[0], &result, sizeof(TResult)) > 0)
-    {
-        /* End signal => stop dealing with data */
-        if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
-            break;
-
-        if (gSimulation.fReduceResult == 0)
+        /* Read the incoming event */
+        while (read(gPipe[0], &result, sizeof(TResult)) > 0)
         {
+            /* End signal => stop dealing with data */
+            if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
+                break;
+
             /* Write the event to the output file - only write what's needed */
-            write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength);
+            UNUSED_RETURN(write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength));
         }
-        else
+
+        close(outFD);
+    }
+    else
+    {
+        /* Read the incoming event */
+        while (read(gPipe[0], &result, sizeof(TResult)) > 0)
         {
+            /* End signal => stop dealing with data */
+            if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
+                break;
+
             /* Pass the result to the simulation */
             gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult);
         }
-    }
-
-    if (gSimulation.fReduceResult == 0)
-    {
-        close(outFD);
     }
 
     return 0;
@@ -404,7 +407,7 @@ int main(int argc, char * argv[])
 
 end4:
     /* Send the end signal to writer */
-    write(gPipe[1], &gNullResult, sizeof(TResult));
+    UNUSED_RETURN(write(gPipe[1], &gNullResult, sizeof(TResult)));
 
     /* Wait for the end of the writer */
     pthread_join(writingThread, &ret);

@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
         /* If we couldn't find the event, print */
         if (found == 0)
         {
-            int i;
+            unsigned int i;
             char digestStr[ID_FIELD_SIZE*2+1];
 
             for (i = 0; i < ID_FIELD_SIZE; i++)
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
             if (fabs(res1[0] - res2[0]) > DBL_EPSILON ||
                 fabs(res1[1] - res2[1]) > DBL_EPSILON)
             {
-                int i;
+                unsigned int i;
                 char digestStr[ID_FIELD_SIZE*2+1];
 
                 for (i = 0; i < ID_FIELD_SIZE; i++)

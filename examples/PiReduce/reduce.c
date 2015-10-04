@@ -25,6 +25,10 @@ int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long n
 {
     TContext * context;
 
+    UNUSED_PARAMETER(nThreads);
+    UNUSED_PARAMETER(nEvents);
+    UNUSED_PARAMETER(firstEvent);
+
     /* Check we're running in the context we where built for */
 #ifdef USE_PILOT_THREAD
     if (!isPilot)
@@ -54,6 +58,9 @@ int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long n
 void ReduceResult(void * simContext, char const * outputFile, void const * id, uint32_t resultLength, void const * result)
 {
     TContext * context = simContext;
+
+    UNUSED_PARAMETER(outputFile);
+    UNUSED_PARAMETER(id);
 
     /* Validate input size */
     if (resultLength != 2 * sizeof(double))
