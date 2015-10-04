@@ -173,6 +173,11 @@ static void * WriteResults(void * Arg)
     char * outputFile = reinterpret_cast<char *>(Arg);
     int outFD;
 
+#define LOOP_FOR_EVENTS(f)                                        \
+    while ((read(gPipe[0], &result, sizeof(TResult)) > 0) &&      \
+           (memcmp(&result, &gNullResult, sizeof(TResult)) != 0)) \
+        f
+
     /* For performances reason (compiler optimisation, distinguish the two cases) */
     if (gSimulation.fReduceResult == 0)
     {
@@ -180,31 +185,19 @@ static void * WriteResults(void * Arg)
         outFD = open(outputFile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         assert(outFD != -1);
 
-        /* Read the incoming event */
-        while (read(gPipe[0], &result, sizeof(TResult)) > 0)
-        {
-            /* End signal => stop dealing with data */
-            if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
-                break;
-
-            /* Write the event to the output file - only write what's needed */
-            UNUSED_RETURN(write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength));
-        }
+        /* Read the incoming event and write only what's needed to the output file.
+         * This loop will end on end signal event
+         */
+        LOOP_FOR_EVENTS(UNUSED_RETURN(write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength)));
 
         close(outFD);
     }
     else
     {
-        /* Read the incoming event */
-        while (read(gPipe[0], &result, sizeof(TResult)) > 0)
-        {
-            /* End signal => stop dealing with data */
-            if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
-                break;
-
-            /* Pass the result to the simulation */
-            gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult);
-        }
+        /* Read the incoming event and pass it to the simulation
+         * This loop will end on end signal event
+         */
+        LOOP_FOR_EVENTS(gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult));
     }
 
     return 0;
