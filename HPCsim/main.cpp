@@ -78,6 +78,12 @@ extern "C" void QueueResult(TResult * result)
     /* Set our ID first, and send to write thread */
     memcpy(result->fId, tRand->GetDigest(), sizeof(TResult::fId));
     pthread_mutex_lock(&gPipeLock);
+    /* Note regarding valgrind: valgrind will complain because of a call to write()
+     * referencing non-initialized memory. This is to be expected: the TResult is allocated
+     * from stack and is only initialized with meaningful data. Furthermore, when going to
+     * disk, only relevant bits will be written. So, for performances reasons, we don't zero
+     * the stack object, and tolerate valgrind complain.
+     */
     UNUSED_RETURN(write(gPipe[1], result, sizeof(TResult)));
     pthread_mutex_unlock(&gPipeLock);
 }
