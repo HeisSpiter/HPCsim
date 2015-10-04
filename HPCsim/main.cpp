@@ -39,6 +39,7 @@ struct TSimulationAddresses
 #ifdef USE_PILOT_THREAD
     TPilotClear * fPilotClear;
 #endif
+    TReduceResult * fReduceResult;
     TRunClear * fRunClear;
     TSimulationUnload * fSimulationUnload;
 };
@@ -164,9 +165,14 @@ static void * WriteResults(void * Arg)
     char * outputFile = reinterpret_cast<char *>(Arg);
     int outFD;
 
-    /* Open the output file */
-    outFD = open(outputFile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    assert(outFD != -1);
+    /* In case the simulation doesn't have a dispatcher for results,
+     * open the output file
+     */
+    if (gSimulation.fReduceResult == 0)
+    {
+        outFD = open(outputFile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        assert(outFD != -1);
+    }
 
     /* Read the incoming event */
     while (read(gPipe[0], &result, sizeof(TResult)) > 0)
@@ -175,11 +181,22 @@ static void * WriteResults(void * Arg)
         if (memcmp(&result, &gNullResult, sizeof(TResult)) == 0)
             break;
 
-        /* Write the event to the output file - only write what's needed */
-        write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength);
+        if (gSimulation.fReduceResult == 0)
+        {
+            /* Write the event to the output file - only write what's needed */
+            write(outFD, &result, offsetof(TResult, fResult) + result.fResultLength);
+        }
+        else
+        {
+            /* Pass the result to the simulation */
+            gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult);
+        }
     }
 
-    close(outFD);
+    if (gSimulation.fReduceResult == 0)
+    {
+        close(outFD);
+    }
 
     return 0;
 }
@@ -292,6 +309,7 @@ int main(int argc, char * argv[])
 #ifdef USE_PILOT_THREAD
     LoadAndSetSimulationFunction(PilotClear);
 #endif
+    LoadAndSetSimulationFunction(ReduceResult);
     LoadAndSetSimulationFunction(RunClear);
     LoadAndSetSimulationFunction(SimulationUnload);
 

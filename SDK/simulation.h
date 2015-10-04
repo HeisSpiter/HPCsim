@@ -101,6 +101,17 @@ typedef void (TEventRun)(void * simContext, void * eventContext);
 typedef void (TEventClear)(void * simContext, void * eventContext);
 #endif
 /**
+ * Can be provided to avoid direct writing of the results to the disk, in case a reduce work is required.
+ * It totally disables writings done by HPCsim. There's only one call to ReduceResult() at a time (no concurrency).
+ * It runs in its own thread (I/O thread), be careful when accessing simContext.
+ * @param simContext The allocated buffer during SimulationInit()
+ * @param outputFile The name of the output file received on command line
+ * @param id The ID of the result to write. Its size is: ID_FIELD_SIZE
+ * @param resultLength Size of the result buffer. At max, it will be 0x800
+ * @param result The buffer containing the result to handle
+ */
+typedef void (TReduceResult)(void * simContext, char const * outputFile, void const * id, uint32_t resultLength, void const * result);
+/**
  * Called right after the run finishes (after the last event was proceed)
  * @param simContext The allocated buffer during SimulationInit()
  */

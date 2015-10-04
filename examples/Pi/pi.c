@@ -13,6 +13,8 @@
 TSimulationInit SimulationInit;
 TEventRun EventRun;
 
+/* Reduce comes with its own init implementation */
+#ifndef BUILD_WITH_REDUCE
 int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
 {
     /* Check we're running in the context we where built for */
@@ -28,6 +30,7 @@ int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long n
     return 0;
 #endif
 }
+#endif
 
 #ifdef USE_PILOT_THREAD
 void EventRun(void * simContext, void * pilotContext, void * eventContext)

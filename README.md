@@ -12,7 +12,7 @@ Because of its design, this simulation core is well suited for simulations where
 
 Because it has virtually no dependencies, this simulation framework can be ported over Xeon Phi (k1om) without troubles.
 
-# Example
+# Example 1
 
 So far, HPCsim comes with a single example, used to compute Pi. To use it, just build the whole repository (that's the default) and then simply run: ./HPCsim/HPCsim -s examples/Pi/libPi.so
 
@@ -36,6 +36,12 @@ To really compute the value of Pi, given all these random points, just use the "
 
 You'll notice that given the same amount of events, whatever the number of threads you'll spawn, you'll get the exact same result.
 
+# Example 2
+
+The second example is only the first one, slightly modified not to write any output file, and simply perform a map reduce operation and print out the computed value of Pi at the end of the execution. This means that there is no need anylonger for the ResPi application in this specific case. To use it, just build the whole repository (that's the default) and then simply run: ./HPCsim/HPCsim -s examples/PiReduce/libPiReduce.so
+
+It uses the same default options as for example 1, and shares some code with it.
+
 # Writing a simulation
 
 In order to write a simulation using HPCsim, all you need to is to implement a shared object (as shown with Pi simulation) that implements a few functions that HPCsim will call.
@@ -46,7 +52,9 @@ In case you built your simulation with -DUSE_PILOT_THREAD=1, then, you have to i
 
 In order to allow the user to perform Monte Carlo simulation, two functions are exported to the user: RandU01() and QueueResult(). The first one is returning an uniformly distributed between 0 and 1 pseudo-random number. The stream it comes from is local to the event and independant from the streams of the others events. This mandatory to have sound statistical results. QueueResult() is there to allow you to write in an async way your results. You have to match the TResult structure for writing your resuls. You don't have to fill in fId field, HPCsim will do it for you. You only need to set how much (in bytes) you consume in the fResult buffer. Only these bytes will be written to disk.
 
-As a reminder, for performances reasons, during the simulation, it is highly recommanded NOT TO perform any IO, be it to console or to disk. If you want to write to the disk, use the QueueResult() function that uses a background writer thread in order not to impact on computation performances. Also, any read you should do, do it during init, and share it to your events (if RO) or copy it to your events (if RW)
+As a reminder, for performances reasons, during the simulation, it is highly recommanded NOT TO perform any IO, be it to console or to disk. If you want to write to the disk, use the QueueResult() function that uses a background writer thread in order not to impact on computation performances. Also, any read you should do, do it during init, and share it to your events (if RO) or copy it to your events (if RW).
+
+In case you want to perform a reduce, instead of just writing the results to the disk, just use QueueResult() as explained previously, and implement the ReduceResult() function. This function will be called sequentially, in its own thread (the background write thread) so that you can handle the results. In case you would like to perform IO, it is called with the output file name. We recommend that you open the file on the first call and keep it open for all the next calls (store the file descriptor in the simulation context) for performances reasons.
 
 # Acknowledgements
 
