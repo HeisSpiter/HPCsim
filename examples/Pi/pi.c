@@ -48,6 +48,9 @@ void EventRun(void * simContext, void * eventContext)
     double * resultBuffer;
 
     UNUSED_PARAMETER(simContext);
+#ifdef USE_PILOT_THREAD
+    UNUSED_PARAMETER(pilotContext);
+#endif
     UNUSED_PARAMETER(eventContext);
 
     /* We'll compute 10,000 values on each thread */
