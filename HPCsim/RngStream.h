@@ -30,9 +30,6 @@ void ResetStartSubstream ();
 void ResetNextSubstream ();
 
 
-void SetAntithetic (bool a);
-
-
 void IncreasedPrecis (bool incp);
 
 
@@ -71,7 +68,7 @@ unsigned char digest[ID_FIELD_SIZE];
 static_assert(sizeof(Cg) == sizeof(digest), "Mismatching sizes");
 
 
-bool anti, incPrec;
+bool incPrec;
 
 
 std::string name;

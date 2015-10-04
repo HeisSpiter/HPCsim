@@ -261,7 +261,7 @@ double RngStream::U01 ()
     /* Combination */
     u = ((p1 > p2) ? (p1 - p2) * norm : (p1 - p2 + m1) * norm);
 
-    return (anti == false) ? u : (1 - u);
+    return u;
 }
 
 
@@ -272,14 +272,8 @@ double RngStream::U01d ()
 {
     double u;
     u = U01();
-    if (anti) {
-        // Don't forget that U01() returns 1 - u in the antithetic case
-        u += (U01() - 1.0) * fact;
-        return (u < 0.0) ? u + 1.0 : u;
-    } else {
-        u += U01() * fact;
-        return (u < 1.0) ? u : (u - 1.0);
-    }
+    u += U01() * fact;
+    return (u < 1.0) ? u : (u - 1.0);
 }
 
 
@@ -302,7 +296,6 @@ double RngStream::nextSeed[6] =
 //
 RngStream::RngStream (const char *s) : name (s)
 {
-   anti = false;
    incPrec = false;
 
    /* Information on a stream. The arrays {Cg, Bg, Ig} contain the current
@@ -445,7 +438,6 @@ void RngStream::WriteStateFull () const
     cout << "The RngStream";
     if (name.size() > 0)
         cout << " " << name;
-    cout << ":\n   anti = " << (anti ? "true" : "false") << "\n";
     cout << "   incPrec = " << (incPrec ? "true" : "false") << "\n";
 
     cout << "   Ig = { ";
@@ -472,13 +464,6 @@ void RngStream::WriteStateFull () const
 void RngStream::IncreasedPrecis (bool incp)
 {
    incPrec = incp;
-}
-
-
-//-------------------------------------------------------------------------
-void RngStream::SetAntithetic (bool a)
-{
-   anti = a;
 }
 
 
