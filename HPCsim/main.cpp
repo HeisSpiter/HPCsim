@@ -254,7 +254,19 @@ int main(int argc, char * argv[])
             static bool written = false;
 
             case 't':
-                nThreads = strtoul(optarg, 0, 10);
+                if (optarg[0] == 'a' && optarg[1] == 0)
+                {
+                    nThreads = sysconf(_SC_NPROCESSORS_ONLN);
+                }
+                else
+                {
+                    nThreads = strtoul(optarg, 0, 10);
+                }
+
+                if (nThreads == 0)
+                {
+                    nThreads = 1;
+                }
                 break;
 
             case 'e':
