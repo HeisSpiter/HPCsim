@@ -3,8 +3,8 @@ include(CheckIncludeFiles)
 
 project(HPCsim)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -W -Wall -Wextra")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -W -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -W -Wall -Wextra -pedantic")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -W -Wall -Wextra -pedantic")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math -fsignaling-nans")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")

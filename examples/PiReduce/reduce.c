@@ -78,6 +78,6 @@ void SimulationUnload(void * simContext)
     TContext * context = simContext;
 
     /* Compute PI for real */
-    printf("Pi: %lf (with %lf samples)\n", (4.0 * context->fInside) / context->fTotal, context->fTotal);
+    printf("Pi: %f (with %f samples)\n", (4.0 * context->fInside) / context->fTotal, context->fTotal);
     free(context);
 }

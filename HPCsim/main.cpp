@@ -64,7 +64,7 @@ static const unsigned char gUsingPilot = 0;
 static __thread RngStream * tRand = 0;
 
 #define LoadAndSetSimulationFunction(name)                       \
-    gSimulation.f##name = (T##name *)dlsym(simulationLib, #name)
+    *(void **)&gSimulation.f##name = dlsym(simulationLib, #name)
 
 /* Exported */
 extern "C" double RandU01(void)

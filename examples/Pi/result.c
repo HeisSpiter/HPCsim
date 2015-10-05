@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     fclose(inFD);
 
     /* Compute PI for real */
-    printf("Pi: %lf (with %lf samples)\n", (4.0 * inside) / total, total);
+    printf("Pi: %f (with %f samples)\n", (4.0 * inside) / total, total);
 
     return 0;
 }

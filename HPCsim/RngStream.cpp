@@ -485,7 +485,7 @@ double RngStream::RandU01 ()
 int RngStream::RandInt (int low, int high)
 {
     return low + static_cast<int> ((high - low + 1.0) * RandU01 ());
-};
+}
 
 
 //-------------------------------------------------------------------------
@@ -494,7 +494,7 @@ int RngStream::RandInt (int low, int high)
 double RngStream::RandDouble (double low, double high)
 {
     return low + ((high - low + 1.0) * RandU01 ());
-};
+}
 
 
 //-------------------------------------------------------------------------

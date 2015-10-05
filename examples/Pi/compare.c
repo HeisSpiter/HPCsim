@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
                 }
 
                 printf("Mismatching ID: %s\n", digestStr);
-                printf("res1[0]: %lf, res1[1]: %lf\nres2[0]: %lf, res2[1]: %lf\n", res1[0], res1[1], res2[0], res2[1]);
+                printf("res1[0]: %f, res1[1]: %f\nres2[0]: %f, res2[1]: %f\n", res1[0], res1[1], res2[0], res2[1]);
                 --correct;
             }
         }
