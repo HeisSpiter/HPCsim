@@ -18,40 +18,7 @@ public:
 RngStream (const char *name = "");
 
 
-static bool SetPackageSeed (const unsigned long seed[6]);
-
-
-void ResetStartStream ();
-
-
-void ResetStartSubstream ();
-
-
-void ResetNextSubstream ();
-
-
-bool SetSeed (const unsigned long seed[6]);
-
-
-void AdvanceState (long e, long c);
-
-
-void GetState (unsigned long seed[6]) const;
-
-
-void WriteState () const;
-
-
-void WriteStateFull () const;
-
-
 double RandU01 ();
-
-
-int RandInt (int i, int j);
-
-
-double RandDouble (double i, double j);
 
 
 const unsigned char * GetDigest() const;
