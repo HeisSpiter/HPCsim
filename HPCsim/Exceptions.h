@@ -21,9 +21,10 @@ void SignalHandler(int signal, siginfo_t * sigInfo, void * context);
 #define HPCSIM_MAGIC_MARKER 0x42424242
 
 /* Begin of a try/except block */
-#define HPCSIM_TRY \
-    gInTry = true; \
-    if (setjmp(gJumpEnv) == 0)
+#define HPCSIM_TRY     \
+    do {               \
+        gInTry = true; \
+        if (setjmp(gJumpEnv) == 0)
 
 /* Begin of the except block.
  * It is not mandatory
@@ -33,15 +34,17 @@ void SignalHandler(int signal, siginfo_t * sigInfo, void * context);
 /* Manually throw an error when in the try block
  * to get into the except block.
  */
-#define HPCSIM_THROW \
-    do { \
-        sigval val; \
+#define HPCSIM_THROW                         \
+    do {                                     \
+        sigval val;                          \
         val.sival_int = HPCSIM_MAGIC_MARKER; \
-        sigqueue(getpid(), SIGSEGV, val); \
+        sigqueue(getpid(), SIGSEGV, val);    \
     } while(0)
 
 /* End marker of a try/except block.
  * It is mandatory in any case.
  * Not using it will lead to broken error handling
  */
-#define HPCSIM_END gInTry = false;
+#define HPCSIM_END      \
+        gInTry = false; \
+    } while(0);
