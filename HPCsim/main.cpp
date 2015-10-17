@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "Exceptions.h"
 #include "TThreadsFactory.h"
 #include "RngStream.h"
 #include "simulation.h"
@@ -95,11 +96,21 @@ static void * SimulationLoop(void * Arg)
     void * pilotContext = 0;
 
     /* Init the pilot */
-    if (gSimulation.fPilotInit != 0 &&
-        gSimulation.fPilotInit(gSimulationContext, &pilotContext) < 0)
+    if (gSimulation.fPilotInit != 0)
     {
-        sem_post(TThreadsFactory::GetInstance()->GetInitLock());
-        return 0;
+        HPCSIM_TRY
+        {
+            if (gSimulation.fPilotInit(gSimulationContext, &pilotContext) < 0)
+            {
+                HPCSIM_THROW;
+            }
+        }
+        HPCSIM_EXCEPT
+        {
+            sem_post(TThreadsFactory::GetInstance()->GetInitLock());
+            return 0;
+        }
+        HPCSIM_END
     }
 
     for (unsigned long event = 0; event < context->fEvents; ++event)
@@ -112,40 +123,73 @@ static void * SimulationLoop(void * Arg)
 
         tRand = &rand;
         /* Init the event */
-#ifdef USE_PILOT_THREAD
-        if (gSimulation.fEventInit != 0 &&
-            gSimulation.fEventInit(gSimulationContext, pilotContext, &eventContext) < 0)
-#else
-        if (gSimulation.fEventInit != 0 &&
-            gSimulation.fEventInit(gSimulationContext, &eventContext) < 0)
-#endif
+        if (gSimulation.fEventInit != 0)
         {
+            HPCSIM_TRY
+            {
 #ifdef USE_PILOT_THREAD
-            continue;
+                if (gSimulation.fEventInit(gSimulationContext, pilotContext, &eventContext) < 0)
 #else
-            sem_post(TThreadsFactory::GetInstance()->GetInitLock());
-            return 0;
+                if (gSimulation.fEventInit(gSimulationContext, &eventContext) < 0)
 #endif
+                {
+                    HPCSIM_THROW;
+                }
+           }
+           HPCSIM_EXCEPT
+           {
+#ifdef USE_PILOT_THREAD
+                continue;
+#else
+                sem_post(TThreadsFactory::GetInstance()->GetInitLock());
+                return 0;
+#endif
+            }
+            HPCSIM_END
         }
 
         /* Release init lock */
         sem_post(TThreadsFactory::GetInstance()->GetInitLock());
 
         /* Call the simulation */
+        HPCSIM_TRY
+        {
 #ifdef USE_PILOT_THREAD
-        gSimulation.fEventRun(gSimulationContext, pilotContext, eventContext);
+            gSimulation.fEventRun(gSimulationContext, pilotContext, eventContext);
 #else
-        gSimulation.fEventRun(gSimulationContext, eventContext);
+            gSimulation.fEventRun(gSimulationContext, eventContext);
 #endif
+        }
+        HPCSIM_EXCEPT
+        {
+#ifdef USE_PILOT_THREAD
+            break;
+#else
+            return 0;
+#endif
+        }
+        HPCSIM_END
 
         /* Notify end of event */
         if (gSimulation.fEventClear != 0)
         {
+            HPCSIM_TRY
+            {
 #ifdef USE_PILOT_THREAD
-            gSimulation.fEventClear(gSimulationContext, pilotContext, eventContext);
+                gSimulation.fEventClear(gSimulationContext, pilotContext, eventContext);
 #else
-            gSimulation.fEventClear(gSimulationContext, eventContext);
+                gSimulation.fEventClear(gSimulationContext, eventContext);
 #endif
+            }
+            HPCSIM_EXCEPT
+            {
+#ifdef USE_PILOT_THREAD
+                break;
+#else
+                return 0;
+#endif
+            }
+            HPCSIM_END
         }
 
         tRand = 0;
@@ -158,7 +202,11 @@ static void * SimulationLoop(void * Arg)
 #ifdef USE_PILOT_THREAD
     if (gSimulation.fPilotClear != 0)
     {
-        gSimulation.fPilotClear(gSimulationContext, pilotContext);
+        HPCSIM_TRY
+        {
+            gSimulation.fPilotClear(gSimulationContext, pilotContext);
+        }
+        HPCSIM_END
     }
 
     sem_post(TThreadsFactory::GetInstance()->GetInitLock());
@@ -197,7 +245,11 @@ static void * WriteResults(void * Arg)
         /* Read the incoming event and pass it to the simulation
          * This loop will end on end signal event
          */
-        LOOP_FOR_EVENTS(gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult));
+        HPCSIM_TRY
+        {
+            LOOP_FOR_EVENTS(gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult));
+        }
+        HPCSIM_END
     }
 
     return 0;
@@ -224,6 +276,7 @@ int main(int argc, char * argv[])
     pthread_t writingThread;
     void * ret;
     void * simulationLib;
+    struct sigaction sigHandling;
 #ifdef USE_PILOT_THREAD
     unsigned long eventsPerThread = 0;
     unsigned long padding = 0;
@@ -311,6 +364,9 @@ int main(int argc, char * argv[])
         return 0;
     }
 
+    /* Init error lock */
+    pthread_mutex_init(&gHandlerLock, 0);
+
     /* Load its functions */
     LoadAndSetSimulationFunction(SimulationInit);
     LoadAndSetSimulationFunction(RunInit);
@@ -334,12 +390,40 @@ int main(int argc, char * argv[])
         goto end;
     }
 
+    /* Initialize our signal handling */
+    memset(&sigHandling, 0, sizeof(struct sigaction));
+    sigHandling.sa_sigaction = SignalHandler;
+    /* We want it to be automatically reset and we want extended info */
+    sigHandling.sa_flags = SA_SIGINFO;
+
+    /* These are all the signals we will handle
+     * So that simulation can still use SIGUSR1/SIGUSR2 for internal sync
+     */
+    sigaction(SIGABRT, &sigHandling, NULL);
+    sigaction(SIGBUS, &sigHandling, NULL);
+    sigaction(SIGFPE, &sigHandling, NULL);
+    sigaction(SIGILL, &sigHandling, NULL);
+    sigaction(SIGSEGV, &sigHandling, NULL);
+    sigaction(SIGSYS, &sigHandling, NULL);
+    sigaction(SIGXCPU, &sigHandling, NULL);
+    sigaction(SIGXFSZ, &sigHandling, NULL);
+
     /* Init the simulation */
-    if (gSimulation.fSimulationInit != 0 &&
-        gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &gSimulationContext) < 0)
+    if (gSimulation.fSimulationInit != 0)
     {
-        std::cerr << "Failed initializing library" << std::endl;
-        goto end;
+        HPCSIM_TRY
+        {
+            if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &gSimulationContext) < 0)
+            {
+                HPCSIM_THROW;
+            }
+        }
+        HPCSIM_EXCEPT
+        {
+            std::cerr << "Failed initializing library" << std::endl;
+            goto end;
+        }
+        HPCSIM_END
     }
 
     /* Advance in the generator */
@@ -370,11 +454,21 @@ int main(int argc, char * argv[])
     }
 
     /* Initialize the run */
-    if (gSimulation.fRunInit != 0 &&
-        gSimulation.fRunInit(gSimulationContext) < 0)
+    if (gSimulation.fRunInit != 0)
     {
-        std::cerr << "Failed initializing run" << std::endl;
-        goto end4;
+        HPCSIM_TRY
+        {
+            if (gSimulation.fRunInit(gSimulationContext) < 0)
+            {
+                HPCSIM_THROW;
+            }
+        }
+        HPCSIM_EXCEPT
+        {
+            std::cerr << "Failed initializing run" << std::endl;
+            goto end4;
+        }
+        HPCSIM_END
     }
 
 #ifndef USE_PILOT_THREAD
@@ -413,7 +507,11 @@ int main(int argc, char * argv[])
     /* Signal end of run */
     if (gSimulation.fRunClear != 0)
     {
-        gSimulation.fRunClear(gSimulationContext);
+        HPCSIM_TRY
+        {
+            gSimulation.fRunClear(gSimulationContext);
+        }
+        HPCSIM_END
     }
 
 end4:
@@ -431,9 +529,14 @@ end2:
     pthread_mutex_destroy(&gPipeLock);
     if (gSimulation.fSimulationUnload != 0)
     {
-        gSimulation.fSimulationUnload(gSimulationContext);
+        HPCSIM_TRY
+        {
+            gSimulation.fSimulationUnload(gSimulationContext);
+        }
+        HPCSIM_END
     }
 end:
+    pthread_mutex_destroy(&gHandlerLock);
     dlclose(simulationLib);
     return 0;
 }

@@ -8,8 +8,7 @@
 
 #include <cassert>
 #include "TThreadsFactory.h"
-
-#include <iostream>
+#include "Exceptions.h"
 
 TThreadsFactory::TThreadsFactory()
 {
