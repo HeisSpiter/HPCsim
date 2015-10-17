@@ -427,10 +427,7 @@ int main(int argc, char * argv[])
     }
 
     /* Advance in the generator */
-    for (unsigned long i = 0; i < firstEvent; ++i)
-    {
-        RngStream rand;
-    }
+    RngStream::AdvanceStream(firstEvent);
 
     /* Initialize our pipe lock */
     pthread_mutex_init(&gPipeLock, 0);

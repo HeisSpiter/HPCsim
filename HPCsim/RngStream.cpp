@@ -128,6 +128,17 @@ RngStream::RngStream (const char *s) : name (s)
 
 
 //-------------------------------------------------------------------------
+// Advance in seeds to skip streams
+//
+void RngStream::AdvanceStream(unsigned long n)
+{
+   for (unsigned long i = 0; i < n; ++i) {
+      MatVecModM (A1p127, nextSeed, nextSeed, m1);
+      MatVecModM (A2p127, &nextSeed[3], &nextSeed[3], m2);
+   }
+}
+
+//-------------------------------------------------------------------------
 // Generate the next random number.
 //
 double RngStream::RandU01 ()

@@ -18,6 +18,9 @@ public:
 RngStream (const char *name = "");
 
 
+static void AdvanceStream(unsigned long n);
+
+
 double RandU01 ();
 
 
