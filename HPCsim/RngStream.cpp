@@ -296,8 +296,6 @@ double RngStream::nextSeed[6] =
 //
 RngStream::RngStream (const char *s) : name (s)
 {
-   incPrec = false;
-
    /* Information on a stream. The arrays {Cg, Bg, Ig} contain the current
    state of the stream, the starting state of the current SubStream, and the
    starting state of the stream. This stream generates antithetic variates
@@ -438,7 +436,6 @@ void RngStream::WriteStateFull () const
     cout << "The RngStream";
     if (name.size() > 0)
         cout << " " << name;
-    cout << "   incPrec = " << (incPrec ? "true" : "false") << "\n";
 
     cout << "   Ig = { ";
     for (i = 0; i < 5; i++) {
@@ -461,21 +458,11 @@ void RngStream::WriteStateFull () const
 
 
 //-------------------------------------------------------------------------
-void RngStream::IncreasedPrecis (bool incp)
-{
-   incPrec = incp;
-}
-
-
-//-------------------------------------------------------------------------
 // Generate the next random number.
 //
 double RngStream::RandU01 ()
 {
-   if (incPrec)
-      return U01d();
-   else
-      return U01();
+    return U01();
 }
 
 

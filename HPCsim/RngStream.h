@@ -30,9 +30,6 @@ void ResetStartSubstream ();
 void ResetNextSubstream ();
 
 
-void IncreasedPrecis (bool incp);
-
-
 bool SetSeed (const unsigned long seed[6]);
 
 
@@ -66,9 +63,6 @@ double Cg[6], Bg[6], Ig[6];
 
 unsigned char digest[ID_FIELD_SIZE];
 static_assert(sizeof(Cg) == sizeof(digest), "Mismatching sizes");
-
-
-bool incPrec;
 
 
 std::string name;
