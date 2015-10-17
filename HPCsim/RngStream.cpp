@@ -239,7 +239,7 @@ int CheckSeed (const unsigned long seed[6])
 //-------------------------------------------------------------------------
 // Generate the next random number.
 //
-double RngStream::U01 ()
+double RngStream::RandU01 ()
 {
     long k;
     double p1, p2, u;
@@ -262,18 +262,6 @@ double RngStream::U01 ()
     u = ((p1 > p2) ? (p1 - p2) * norm : (p1 - p2 + m1) * norm);
 
     return u;
-}
-
-
-//-------------------------------------------------------------------------
-// Generate the next random number with extended (53 bits) precision.
-//
-double RngStream::U01d ()
-{
-    double u;
-    u = U01();
-    u += U01() * fact;
-    return (u < 1.0) ? u : (u - 1.0);
 }
 
 
@@ -454,15 +442,6 @@ void RngStream::WriteStateFull () const
         cout << static_cast<unsigned long> (Cg [i]) << ", ";
     }
     cout << static_cast<unsigned long> (Cg [5]) << " }\n\n";
-}
-
-
-//-------------------------------------------------------------------------
-// Generate the next random number.
-//
-double RngStream::RandU01 ()
-{
-    return U01();
 }
 
 

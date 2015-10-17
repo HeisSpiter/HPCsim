@@ -71,12 +71,6 @@ std::string name;
 static double nextSeed[6];
 
 
-double U01 ();
-
-
-double U01d ();
-
-
 };
  
 #endif
