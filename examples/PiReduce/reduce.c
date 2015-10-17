@@ -47,7 +47,7 @@ int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long n
 
     /* Init it */
     context->fTotal = 0.;
-    context->fInside = 0;
+    context->fInside = 0.;
 
     /* And return it */
     *simContext = context;

@@ -62,7 +62,7 @@ void EventRun(void * simContext, void * eventContext)
         if (x * x + y * y < 1.0)
         {
             ++inside;
-        } 
+        }
     }
 
     /* We'll return 2 unsigned long */
