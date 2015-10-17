@@ -113,7 +113,7 @@ static void * SimulationLoop(void * Arg)
         HPCSIM_END
     }
 
-    for (unsigned long event = 0; event < context->fEvents; ++event)
+    for (volatile unsigned long event = 0; event < context->fEvents; ++event)
 #else
     UNUSED_PARAMETER(Arg);
 #endif
@@ -268,9 +268,9 @@ static void PrintUsage(char * name)
 int main(int argc, char * argv[])
 {
     int option;
-    unsigned int nThreads = 1;
-    unsigned long nEvents = 100;
-    unsigned long firstEvent = 0;
+    volatile unsigned int nThreads = 1;
+    volatile unsigned long nEvents = 100;
+    volatile unsigned long firstEvent = 0;
     char outputFile[PATH_MAX] = DEFAULT_NAME;
     char simulationFile[PATH_MAX] = "";
     pthread_t writingThread;

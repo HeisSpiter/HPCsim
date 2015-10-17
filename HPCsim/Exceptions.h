@@ -13,6 +13,7 @@
 extern __thread jmp_buf gJumpEnv;
 extern volatile __thread bool gInTry;
 extern pthread_mutex_t gHandlerLock;
+extern const sigval_t gMagicMarker;
 void SignalHandler(int signal, siginfo_t * sigInfo, void * context);
 
 /* Magic marker to recognize signals we send on purpose in
@@ -34,12 +35,7 @@ void SignalHandler(int signal, siginfo_t * sigInfo, void * context);
 /* Manually throw an error when in the try block
  * to get into the except block.
  */
-#define HPCSIM_THROW                         \
-    do {                                     \
-        sigval val;                          \
-        val.sival_int = HPCSIM_MAGIC_MARKER; \
-        sigqueue(getpid(), SIGSEGV, val);    \
-    } while(0)
+#define HPCSIM_THROW sigqueue(getpid(), SIGSEGV, gMagicMarker)
 
 /* End marker of a try/except block.
  * It is mandatory in any case.

@@ -18,6 +18,7 @@
 __thread jmp_buf gJumpEnv;
 volatile __thread bool gInTry = false;
 pthread_mutex_t gHandlerLock;
+const sigval_t gMagicMarker = {HPCSIM_MAGIC_MARKER};
 /* Before accessing this buffer, make sure you locked gHandlerLock */
 static void * gBuffer[BUFFER_SIZE];
 
@@ -28,6 +29,10 @@ void SignalHandler(int signal, siginfo_t * sigInfo, void * context)
 
     UNUSED_PARAMETER(context);
 
+    /* If the signal wasn't sent on purpose by ourselves, then, it indicates
+     * a broken behavior in either HPCsim or the called simulation.
+     * We'll have to provide a backtrace to help debugging.
+     */
     if (sigInfo->si_int != HPCSIM_MAGIC_MARKER)
     {
         /* Lock the handler lock for two reasons:
