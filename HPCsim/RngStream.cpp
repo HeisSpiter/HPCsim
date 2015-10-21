@@ -105,6 +105,15 @@ double RngStream::nextSeed[6] =
 
 
 //-------------------------------------------------------------------------
+// Get the next seed
+//
+const double * RngStream::GetNextSeed ()
+{
+    return nextSeed;
+}
+
+
+//-------------------------------------------------------------------------
 // constructor
 //
 RngStream::RngStream (const char *s) : name (s)

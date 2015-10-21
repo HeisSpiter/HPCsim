@@ -26,6 +26,9 @@ double RandU01 ();
 
 const unsigned char * GetDigest() const;
 
+
+static const double * GetNextSeed();
+
 private:
 
 double Cg[6], Bg[6], Ig[6];

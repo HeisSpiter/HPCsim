@@ -20,7 +20,7 @@ By default, it will compute 1,000,000 points to be able to approximate Pi value.
 
 You can adjust the number of events, of threads, and the starting events by using HPCsim parameters:
 
-Usage: ./HPCsim/HPCsim --simulation|-s name.so [--threads|-t X --first|-f X --events|-e X --output|-o name]
+Usage: ./HPCsim/HPCsim --simulation|-s name.so [--threads|-t X --first|-f X --events|-e X --output|-o name --checkpoint|-c]
 
 	- Simulation: path of the shared library containing the simulation
 	
@@ -31,6 +31,8 @@ Usage: ./HPCsim/HPCsim --simulation|-s name.so [--threads|-t X --first|-f X --ev
 	- Events: number of events to compute
 	
 	- Output: name of the output file to write
+
+	- Checkpoint: HPCsim will read existing output file to continue the simulation where it was stopped, instead of simulating everything
 
 To really compute the value of Pi, given all these random points, just use the "ResPi" application, that will by default read the HPCsim.out file. It will output the approximated Pi value.
 

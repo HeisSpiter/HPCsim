@@ -56,6 +56,7 @@ static pthread_mutex_t gPipeLock;
 static int gPipe[2];
 static TResult gNullResult;
 static TSimulationAddresses gSimulation;
+static bool gCheckPoint = false;
 static void * gSimulationContext = 0;
 #ifdef USE_PILOT_THREAD
 static const unsigned char gUsingPilot = 1;
@@ -229,9 +230,26 @@ static void * WriteResults(void * Arg)
     /* For performances reason (compiler optimisation, distinguish the two cases) */
     if (gSimulation.fReduceResult == 0)
     {
+        /* Whatever happens, we create if needed, and we want to write */
+        int flags = O_WRONLY | O_CREAT;
+
+        /* In case we are in checkpoint mode, just append at the end of file,
+         * otherwise, erase any content
+         */
+        if (!gCheckPoint)
+        {
+            flags |= O_TRUNC;
+        }
+
         /* Open the output file */
-        outFD = open(outputFile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        outFD = open(outputFile, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
         assert(outFD != -1);
+
+        /* Go to the end of the file if checkpoint */
+        if (gCheckPoint)
+        {
+            lseek(outFD, 0, SEEK_END);
+        }
 
         /* Read the incoming event and write only what's needed to the output file.
          * This loop will end on end signal event
@@ -257,12 +275,13 @@ static void * WriteResults(void * Arg)
 
 static void PrintUsage(char * name)
 {
-    std::cerr << "Usage: " << name << " --simulation|-s name.so [--threads|-t X --first|-f X --events|-e X --output|-o name]" << std::endl;
+    std::cerr << "Usage: " << name << " --simulation|-s name.so [--threads|-t X --first|-f X --events|-e X --output|-o name --checkpoint|-c]" << std::endl;
     std::cerr << "\t- Simulation: path of the shared library containing the simulation" << std::endl;
     std::cerr << "\t- Threads: amount of threads to use for computing (min 1). Beware an extra thread will be used for results writing" << std::endl;
     std::cerr << "\t- First: start the event loop at this event" << std::endl;
     std::cerr << "\t- Events: number of events to compute" << std::endl;
     std::cerr << "\t- Output: name of the output file to write" << std::endl;
+    std::cerr << "\t- Checkpoint: HPCsim will read existing output file to continue the simulation where it was stopped, instead of simulating everything" << std::endl;
 }
 
 int main(int argc, char * argv[])
@@ -294,11 +313,12 @@ int main(int argc, char * argv[])
             {"output", required_argument, 0, 'o'},
             {"first", required_argument, 0, 'f'},
             {"simulation", required_argument, 0, 's'},
+            {"checkpoint", no_argument, 0, 'c'},
             {0, 0, 0, 0}
         };
 
         int option_index = 0;
-        option = getopt_long(argc, argv, "e:t:o:f:s:", long_options, &option_index);
+        option = getopt_long(argc, argv, "e:t:o:f:s:c", long_options, &option_index);
         if (option == -1)
             break;
 
@@ -338,6 +358,10 @@ int main(int argc, char * argv[])
             case 's':
                 strncpy(simulationFile, optarg, PATH_MAX - 1);
                 simulationFile[PATH_MAX - 1] = '\0';
+                break;
+
+            case 'c':
+                gCheckPoint = true;
                 break;
 
             case '?':
@@ -428,6 +452,97 @@ int main(int argc, char * argv[])
 
     /* Advance in the generator */
     RngStream::AdvanceStream(firstEvent);
+
+    /* Checkpoint: time to "replay" already handled events */
+    if (gCheckPoint)
+    {
+        int inFD;
+
+        /* Open the previous output file in read-only */
+        inFD = open(outputFile, O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        if (inFD >= 0)
+        {
+            /* Small optimization to process the file a bit faster:
+             * we won't keep reading events that are already validated
+             */
+            off_t offset = 0;
+
+            /* So, as long as we have events to simulate, try to find them in the old file */
+            while (nEvents != 0)
+            {
+                bool found = false;
+                off_t readOff = offset;
+
+                /* Try to reach the offset were there are unhandled events,
+                 * if we fail, kill the optimization and go back to the begin
+                 * of the file
+                 */
+                if (lseek(inFD, offset, SEEK_SET) == -1)
+                {
+                    lseek(inFD, 0, SEEK_SET);
+                }
+
+                /* While we find contents in the file */
+                while (true)
+                {
+                    uint32_t resultLength;
+                    uint8_t id[ID_FIELD_SIZE];
+
+                    /* Read the ID */
+                    if (read(inFD, id, sizeof(id)) != sizeof(id))
+                    {
+                        break;
+                    }
+
+                    /* Read the result length */
+                    if (read(inFD, &resultLength, sizeof(resultLength)) != sizeof(resultLength))
+                    {
+                        break;
+                    }
+
+                    /* Compare ID with current PRNG (this works due to the nature of RngStream init) */
+                    if (memcmp(RngStream::GetNextSeed(), id, sizeof(id)) == 0)
+                    {
+                        /* Matching, can we optimize reading? */
+                        found = true;
+                        /* We read a the first offset without known ID, so we eat it */
+                        if (offset == readOff)
+                        {
+                            offset = offset + resultLength + sizeof(resultLength) + sizeof(id);
+                        }
+
+                        /* Done for this ID */
+                        break;
+                    }
+
+                    /* Jump to the next event */
+                    if (lseek(inFD, resultLength, SEEK_CUR) == -1)
+                    {
+                        break;
+                    }
+
+                    /* Update offset */
+                    readOff = offset + resultLength + sizeof(resultLength) + sizeof(id);
+                }
+
+                /* If the current ID wasn't found in file, stop here
+                 * It means we found an event that wasn't written in the
+                 * file, this is where we have to start again the simulation
+                 */
+                if (!found)
+                {
+                    break;
+                }
+
+                /* Otherwise, the ID was found, so skip this generator */
+                RngStream::AdvanceStream(1);
+                /* And this will be one less event to generate */
+                --nEvents;
+            }
+
+            close(inFD);
+        }
+    }
 
     /* Initialize our pipe lock */
     pthread_mutex_init(&gPipeLock, 0);
