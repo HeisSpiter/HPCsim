@@ -21,11 +21,17 @@ script:
   - cd build
   - ../cmake/cmake-3.1.0-Linux-x86_64/bin/cmake ../
   - make -j4
-  - ./HPCsim/HPCsim -s examples/Pi/libPi.so
+  - ./HPCsim/HPCsim -e 100 -s examples/Pi/libPi.so
   - cd ../
   - mkdir build_pilot
   - cd build_pilot
   - ../cmake/cmake-3.1.0-Linux-x86_64/bin/cmake -DUSE_PILOT_THREAD=1 ../
   - make -j4
-  - ./HPCsim/HPCsim -s examples/Pi/libPi.so
+  - ./HPCsim/HPCsim -e 100 -s examples/Pi/libPi.so
   - ./examples/Pi/ComparePi ../build/HPCsim.out ./HPCsim.out
+  - cd ../
+  - cd build
+  - rm -f ./HPCsim.out
+  - ./HPCsim/HPCsim -e 50 -s examples/Pi/libPi.so
+  - ./HPCsim/HPCsim -c -e 100 -s examples/Pi/libPi.so
+  - ./examples/Pi/ComparePi ./HPCsim.out ../build_pilot/HPCsim.out
