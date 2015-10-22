@@ -27,7 +27,7 @@
 
 #define DEFAULT_NAME {'H', 'P', 'C', 's', 'i', 'm', '.', 'o', 'u', 't', '\0'}
 
-struct TSimulationAddresses
+struct TSimulationClass
 {
     TSimulationInit * fSimulationInit;
     TRunInit * fRunInit;
@@ -43,6 +43,9 @@ struct TSimulationAddresses
     TReduceResult * fReduceResult;
     TRunClear * fRunClear;
     TSimulationUnload * fSimulationUnload;
+
+    bool fCheckPoint;
+    void * fSimulationContext;
 };
 
 #ifdef USE_PILOT_THREAD
@@ -55,9 +58,7 @@ struct TPilotJobContext
 static pthread_mutex_t gPipeLock;
 static int gPipe[2];
 static TResult gNullResult;
-static TSimulationAddresses gSimulation;
-static bool gCheckPoint = false;
-static void * gSimulationContext = 0;
+static TSimulationClass gSimulation;
 #ifdef USE_PILOT_THREAD
 static const unsigned char gUsingPilot = 1;
 #else
@@ -101,7 +102,7 @@ static void * SimulationLoop(void * Arg)
     {
         HPCSIM_TRY
         {
-            if (gSimulation.fPilotInit(gSimulationContext, &pilotContext) < 0)
+            if (gSimulation.fPilotInit(gSimulation.fSimulationContext, &pilotContext) < 0)
             {
                 HPCSIM_THROW;
             }
@@ -129,9 +130,9 @@ static void * SimulationLoop(void * Arg)
             HPCSIM_TRY
             {
 #ifdef USE_PILOT_THREAD
-                if (gSimulation.fEventInit(gSimulationContext, pilotContext, &eventContext) < 0)
+                if (gSimulation.fEventInit(gSimulation.fSimulationContext, pilotContext, &eventContext) < 0)
 #else
-                if (gSimulation.fEventInit(gSimulationContext, &eventContext) < 0)
+                if (gSimulation.fEventInit(gSimulation.fSimulationContext, &eventContext) < 0)
 #endif
                 {
                     HPCSIM_THROW;
@@ -156,9 +157,9 @@ static void * SimulationLoop(void * Arg)
         HPCSIM_TRY
         {
 #ifdef USE_PILOT_THREAD
-            gSimulation.fEventRun(gSimulationContext, pilotContext, eventContext);
+            gSimulation.fEventRun(gSimulation.fSimulationContext, pilotContext, eventContext);
 #else
-            gSimulation.fEventRun(gSimulationContext, eventContext);
+            gSimulation.fEventRun(gSimulation.fSimulationContext, eventContext);
 #endif
         }
         HPCSIM_EXCEPT
@@ -177,9 +178,9 @@ static void * SimulationLoop(void * Arg)
             HPCSIM_TRY
             {
 #ifdef USE_PILOT_THREAD
-                gSimulation.fEventClear(gSimulationContext, pilotContext, eventContext);
+                gSimulation.fEventClear(gSimulation.fSimulationContext, pilotContext, eventContext);
 #else
-                gSimulation.fEventClear(gSimulationContext, eventContext);
+                gSimulation.fEventClear(gSimulation.fSimulationContext, eventContext);
 #endif
             }
             HPCSIM_EXCEPT
@@ -205,7 +206,7 @@ static void * SimulationLoop(void * Arg)
     {
         HPCSIM_TRY
         {
-            gSimulation.fPilotClear(gSimulationContext, pilotContext);
+            gSimulation.fPilotClear(gSimulation.fSimulationContext, pilotContext);
         }
         HPCSIM_END
     }
@@ -220,7 +221,6 @@ static void * WriteResults(void * Arg)
 {
     TResult result;
     char * outputFile = reinterpret_cast<char *>(Arg);
-    int outFD;
 
 #define LOOP_FOR_EVENTS(f)                                        \
     while ((read(gPipe[0], &result, sizeof(TResult)) > 0) &&      \
@@ -230,13 +230,15 @@ static void * WriteResults(void * Arg)
     /* For performances reason (compiler optimisation, distinguish the two cases) */
     if (gSimulation.fReduceResult == 0)
     {
+        int outFD;
+
         /* Whatever happens, we create if needed, and we want to write */
         int flags = O_WRONLY | O_CREAT;
 
         /* In case we are in checkpoint mode, just append at the end of file,
          * otherwise, erase any content
          */
-        if (!gCheckPoint)
+        if (!gSimulation.fCheckPoint)
         {
             flags |= O_TRUNC;
         }
@@ -246,7 +248,7 @@ static void * WriteResults(void * Arg)
         assert(outFD != -1);
 
         /* Go to the end of the file if checkpoint */
-        if (gCheckPoint)
+        if (gSimulation.fCheckPoint)
         {
             lseek(outFD, 0, SEEK_END);
         }
@@ -265,7 +267,7 @@ static void * WriteResults(void * Arg)
          */
         HPCSIM_TRY
         {
-            LOOP_FOR_EVENTS(gSimulation.fReduceResult(gSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult));
+            LOOP_FOR_EVENTS(gSimulation.fReduceResult(gSimulation.fSimulationContext, outputFile, result.fId, result.fResultLength, result.fResult));
         }
         HPCSIM_END
     }
@@ -361,7 +363,7 @@ int main(int argc, char * argv[])
                 break;
 
             case 'c':
-                gCheckPoint = true;
+                gSimulation.fCheckPoint = true;
                 break;
 
             case '?':
@@ -437,7 +439,7 @@ int main(int argc, char * argv[])
     {
         HPCSIM_TRY
         {
-            if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &gSimulationContext) < 0)
+            if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &gSimulation.fSimulationContext) < 0)
             {
                 HPCSIM_THROW;
             }
@@ -454,7 +456,7 @@ int main(int argc, char * argv[])
     RngStream::AdvanceStream(firstEvent);
 
     /* Checkpoint: time to "replay" already handled events */
-    if (gCheckPoint)
+    if (gSimulation.fCheckPoint)
     {
         int inFD;
 
@@ -570,7 +572,7 @@ int main(int argc, char * argv[])
     {
         HPCSIM_TRY
         {
-            if (gSimulation.fRunInit(gSimulationContext) < 0)
+            if (gSimulation.fRunInit(gSimulation.fSimulationContext) < 0)
             {
                 HPCSIM_THROW;
             }
@@ -621,7 +623,7 @@ int main(int argc, char * argv[])
     {
         HPCSIM_TRY
         {
-            gSimulation.fRunClear(gSimulationContext);
+            gSimulation.fRunClear(gSimulation.fSimulationContext);
         }
         HPCSIM_END
     }
@@ -643,7 +645,7 @@ end2:
     {
         HPCSIM_TRY
         {
-            gSimulation.fSimulationUnload(gSimulationContext);
+            gSimulation.fSimulationUnload(gSimulation.fSimulationContext);
         }
         HPCSIM_END
     }

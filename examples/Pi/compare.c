@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
     char id2[ID_FIELD_SIZE];
     uint32_t len;
     double res1[2], res2[2];
-    unsigned char found;
     unsigned long total = 0, correct = 0;
 
     if (argc < 3)
@@ -46,6 +45,8 @@ int main(int argc, char *argv[])
 
     do
     {
+        unsigned char found = 0;
+
         /* Read ID from first */
         if (fread(id1, sizeof(id1), 1, file1) != 1)
         {
@@ -58,7 +59,6 @@ int main(int argc, char *argv[])
             break;
         }
 
-        found = 0;
         do
         {
             if (fread(id2, sizeof(id2), 1, file2) != 1)

@@ -24,9 +24,6 @@ static void * gBuffer[BUFFER_SIZE];
 
 void SignalHandler(int signal, siginfo_t * sigInfo, void * context)
 {
-    char ** strings;
-    int numberAddresses, trace;
-
     UNUSED_PARAMETER(context);
 
     /* If the signal wasn't sent on purpose by ourselves, then, it indicates
@@ -35,6 +32,9 @@ void SignalHandler(int signal, siginfo_t * sigInfo, void * context)
      */
     if (sigInfo->si_int != HPCSIM_MAGIC_MARKER)
     {
+        char ** strings;
+        int numberAddresses, trace;
+
         /* Lock the handler lock for two reasons:
          * First, we don't want to have a race condition accessing standard error
          * Our backtrace must be crystal clear
