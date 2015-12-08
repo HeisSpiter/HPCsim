@@ -64,3 +64,5 @@ David R.C. Hill for his PhD supervision, and his article:
 Hill R.C., D. (2015), "Parallel Random Numbers, Science and reproducibility", in IEEE Computing in Science and Engineering, 17(4) pp: 66-71.
 
 Pierre l'Ecuyer for his packaging of MRG2k3a as RngStream which is the heart of the HPCsim framework.
+
+This research was financed by the French Government Laboratory of Excellence initiative n°ANR-10-LABX-0006, the Région Auvergne and the European Regional Development Fund. It was also funded by the French Laboratory LIMOS, in Clermont-Ferrand.
