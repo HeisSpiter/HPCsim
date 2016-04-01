@@ -386,7 +386,7 @@ int main(int argc, char * argv[])
     simulationLib = dlopen(simulationFile, RTLD_NOW | RTLD_LOCAL);
     if (simulationLib == 0)
     {
-        std::cerr << "Failed loading " << simulationFile << std::endl;
+        std::cerr << "Failed loading " << simulationFile << ", with error " << dlerror() << std::endl;
         return 0;
     }
 
