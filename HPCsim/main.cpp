@@ -387,6 +387,7 @@ int main(int argc, char * argv[])
     if (simulationLib == 0)
     {
         std::cerr << "Failed loading " << simulationFile << std::endl;
+        std::cerr << dlerror() << std::endl;
         return 0;
     }
 
