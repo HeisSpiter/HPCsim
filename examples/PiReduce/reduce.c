@@ -21,13 +21,14 @@ TSimulationInit SimulationInit;
 TReduceResult ReduceResult;
 TSimulationUnload SimulationUnload;
 
-int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
+int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, const char * userOpts, void ** simContext)
 {
     TContext * context;
 
     UNUSED_PARAMETER(nThreads);
     UNUSED_PARAMETER(nEvents);
     UNUSED_PARAMETER(firstEvent);
+    UNUSED_PARAMETER(userOpts);
 
     /* Check we're running in the context we where built for */
 #ifdef USE_PILOT_THREAD
