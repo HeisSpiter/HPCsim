@@ -65,6 +65,7 @@ static const unsigned char gUsingPilot = 1;
 static const unsigned char gUsingPilot = 0;
 #endif
 static __thread RngStream * tRand = 0;
+static char * gUserOpts = NULL;
 
 #define LoadAndSetSimulationFunction(name)                       \
     *(void **)&gSimulation.f##name = dlsym(simulationLib, #name)
@@ -277,12 +278,13 @@ static void * WriteResults(void * Arg)
 
 static void PrintUsage(char * name)
 {
-    std::cerr << "Usage: " << name << " --simulation|-s name.so [--threads|-t X --first|-f X --events|-e X --output|-o name --checkpoint|-c]" << std::endl;
+    std::cerr << "Usage: " << name << " --simulation|-s name.so [--threads|-t X --first|-f X --events|-e X --output|-o name --user|-u options --checkpoint|-c]" << std::endl;
     std::cerr << "\t- Simulation: path of the shared library containing the simulation" << std::endl;
     std::cerr << "\t- Threads: amount of threads to use for computing (min 1). Beware an extra thread will be used for results writing" << std::endl;
     std::cerr << "\t- First: start the event loop at this event" << std::endl;
     std::cerr << "\t- Events: number of events to compute" << std::endl;
     std::cerr << "\t- Output: name of the output file to write" << std::endl;
+    std::cerr << "\t- Options: user defined options line to be parsed by the simulation shared library" << std::endl;
     std::cerr << "\t- Checkpoint: HPCsim will read existing output file to continue the simulation where it was stopped, instead of simulating everything" << std::endl;
 }
 
@@ -294,6 +296,7 @@ int main(int argc, char * argv[])
     volatile unsigned long firstEvent = 0;
     char outputFile[PATH_MAX] = DEFAULT_NAME;
     char simulationFile[PATH_MAX] = "";
+    int userOptsLen = 0;
     pthread_t writingThread;
     void * ret;
     void * simulationLib;
@@ -315,12 +318,13 @@ int main(int argc, char * argv[])
             {"output", required_argument, 0, 'o'},
             {"first", required_argument, 0, 'f'},
             {"simulation", required_argument, 0, 's'},
+            {"user", required_argument, 0, 'u'},
             {"checkpoint", no_argument, 0, 'c'},
             {0, 0, 0, 0}
         };
 
         int option_index = 0;
-        option = getopt_long(argc, argv, "e:t:o:f:s:c", long_options, &option_index);
+        option = getopt_long(argc, argv, "e:t:o:f:s:u:c", long_options, &option_index);
         if (option == -1)
             break;
 
@@ -362,6 +366,12 @@ int main(int argc, char * argv[])
                 simulationFile[PATH_MAX - 1] = '\0';
                 break;
 
+            case 'u':
+                userOptsLen = strlen(optarg);
+                gUserOpts = new char[userOptsLen+1];
+                strncpy(gUserOpts, optarg, userOptsLen);
+                break;
+
             case 'c':
                 gSimulation.fCheckPoint = true;
                 break;
@@ -379,6 +389,7 @@ int main(int argc, char * argv[])
     if (simulationFile[0] == '\0')
     {
         PrintUsage(argv[0]);
+        delete[] gUserOpts;
         return 0;
     }
 
@@ -387,6 +398,8 @@ int main(int argc, char * argv[])
     if (simulationLib == 0)
     {
         std::cerr << "Failed loading " << simulationFile << std::endl;
+        std::cerr << dlerror() << std::endl;
+        delete[] gUserOpts;
         return 0;
     }
 
@@ -439,7 +452,7 @@ int main(int argc, char * argv[])
     {
         HPCSIM_TRY
         {
-            if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, &gSimulation.fSimulationContext) < 0)
+            if (gSimulation.fSimulationInit(gUsingPilot, nThreads, nEvents, firstEvent, gUserOpts, &gSimulation.fSimulationContext) < 0)
             {
                 HPCSIM_THROW;
             }
@@ -451,6 +464,8 @@ int main(int argc, char * argv[])
         }
         HPCSIM_END
     }
+    delete[] gUserOpts;
+    gUserOpts = NULL;
 
     /* Advance in the generator */
     RngStream::AdvanceStream(firstEvent);
@@ -650,6 +665,7 @@ end2:
         HPCSIM_END
     }
 end:
+    delete[] gUserOpts;
     pthread_mutex_destroy(&gHandlerLock);
     dlclose(simulationLib);
     return 0;

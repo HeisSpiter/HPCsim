@@ -31,10 +31,11 @@ extern "C"
  * @param nThreads Number of concurrent threads that will be created
  * @param nEvents Total number of events proceed
  * @param firstEvent The number of events skipped
+ * @param user provided options line
  * @param simContext Output variable. The user can allocate memory that will be passed to any further call
  * @return -1 in case of error, 0 otherwise
  */
-typedef int (TSimulationInit)(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext);
+typedef int (TSimulationInit)(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, const char * userOpts, void ** simContext);
 /**
  * Called right before the event loop.
  * @param simContext The allocated buffer during SimulationInit()

@@ -15,11 +15,12 @@ TEventRun EventRun;
 
 /* Reduce comes with its own init implementation */
 #ifndef BUILD_WITH_REDUCE
-int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, void ** simContext)
+int SimulationInit(unsigned char isPilot, unsigned int nThreads, unsigned long nEvents, unsigned long firstEvent, const char * userOpts, void ** simContext)
 {
     UNUSED_PARAMETER(nThreads);
     UNUSED_PARAMETER(nEvents);
     UNUSED_PARAMETER(firstEvent);
+    UNUSED_PARAMETER(userOpts);
     UNUSED_PARAMETER(simContext);
 
     /* Check we're running in the context we where built for */
